@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "werkzeugmeister_user",
+    "password": "a3eilm2s2y",
+    "database": "werkzeugmeister",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "werkzeugmeister_user",
+    "password": "a3eilm2s2y",
+    "database": "werkzeugmeister_test",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "werkzeugmeister_user",
+    "password": "a3eilm2s2y",
+    "database": "werkzeugmeister_production",
+    "host": "localhost",
+    "dialect": "postgres"
+  }
+} 
