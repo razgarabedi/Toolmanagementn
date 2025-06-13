@@ -4,6 +4,13 @@ A professional tool management system built with Next.js, TypeScript, and Tailwi
 
 ## Features
 
+ **General Design Principles**
+ -Clean Layout: Ample whitespace and a grid-based system ensure a clutter-free and organized presentation of information.
+ -Subtle Gradients & Shadows: Used sparingly to add depth and define interactive elements without overwhelming the user.
+ -Intuitive Navigation: A collapsible sidebar and clearly labeled icons allow for quick access to all features.
+ -Responsive & Adaptive: Optimized for seamless performance and appearance across desktops,  tablets, and mobile devices.
+ -Accessibility First: Thoughtful color contrast, keyboard navigation, and ARIA attributes ensure usability for all.
+
 - **User Authentication & Authorization**
   - Secure login and registration
   - Role-based access control
