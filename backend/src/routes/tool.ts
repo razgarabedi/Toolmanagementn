@@ -1,15 +1,16 @@
 import { Router } from 'express';
-import { getTools, getTool, createTool, updateTool, deleteTool, checkoutTool, checkinTool } from '../controllers/tool';
-import { authorize } from '../middleware/auth';
+import { getTools, getTool, createTool, updateTool, deleteTool, checkoutTool, checkinTool, getMyCheckedOutTools } from '../controllers/tool';
+import { auth, authorize } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/', getTools as any);
-router.get('/:id', getTool as any);
-router.post('/', authorize(['admin']), createTool as any);
-router.put('/:id', authorize(['admin']), updateTool as any);
-router.delete('/:id', authorize(['admin']), deleteTool as any);
-router.post('/:id/checkout', checkoutTool as any);
-router.post('/:id/checkin', checkinTool as any);
+router.get('/', auth, getTools as any);
+router.get('/my-tools', auth, getMyCheckedOutTools as any);
+router.get('/:id', auth, getTool as any);
+router.post('/', [auth, authorize(['admin', 'manager'])], createTool as any);
+router.put('/:id', [auth, authorize(['admin', 'manager'])], updateTool as any);
+router.delete('/:id', [auth, authorize(['admin', 'manager'])], deleteTool as any);
+router.post('/:id/checkout', auth, checkoutTool as any);
+router.post('/:id/checkin', auth, checkinTool as any);
 
 export default router; 

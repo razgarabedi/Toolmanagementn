@@ -1,0 +1,29 @@
+{
+  "login": {
+    "title": "Anmelden",
+    "emailLabel": "E-Mail",
+    "passwordLabel": "Passwort",
+    "button": "Anmelden",
+    "loggingIn": "Anmeldung läuft...",
+    "success": "Anmeldung erfolgreich!",
+    "error": "Ein Fehler ist aufgetreten."
+  },
+  "nav": {
+    "brand": "Werkzeugmeister Pro",
+    "dashboard": "Dashboard",
+    "managerDashboard": "Manager-Dashboard",
+    "spareParts": "Ersatzteile",
+    "locations": "Standorte",
+    "reports": "Berichte",
+    "tools": "Werkzeuge",
+    "scan": "Scannen",
+    "myBookings": "Meine Buchungen",
+    "calendar": "Kalender",
+    "admin": "Admin",
+    "profile": "Profil",
+    "welcome": "Willkommen, {{username}}!",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "register": "Registrieren"
+  }
+} 

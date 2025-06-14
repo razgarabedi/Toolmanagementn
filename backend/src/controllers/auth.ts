@@ -11,6 +11,17 @@ export const register = async (req: Request, res: Response) => {
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
+    
+    const userCount = await User.count();
+    let roleName = 'user';
+    if (userCount === 0) {
+      roleName = 'admin';
+    }
+
+    const role = await Role.findOne({ where: { name: roleName } });
+    if (!role) {
+      return res.status(500).json({ message: `Default role '${roleName}' not found.` });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -18,7 +29,7 @@ export const register = async (req: Request, res: Response) => {
       username,
       email,
       password_hash: hashedPassword,
-      role_id: 2, // Default to user role
+      role_id: role.id,
     });
 
     res.status(201).json({ message: 'User created successfully' });

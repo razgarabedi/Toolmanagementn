@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../db';
+import Role from './role';
 
 interface UserAttributes {
   id: number;
@@ -17,10 +18,16 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public password_hash!: string;
   public email!: string;
   public role_id!: number;
-  public role: any;
+  public role?: Role;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  public static associate(models: any) {
+    User.belongsTo(models.Role, { as: 'role', foreignKey: 'role_id' });
+    User.hasMany(models.Booking, { as: 'bookings', foreignKey: 'userId' });
+    User.hasMany(models.Notification, { as: 'notifications', foreignKey: 'userId' });
+  }
 }
 
 User.init(

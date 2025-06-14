@@ -1,18 +1,25 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import useAuth from '@/hooks/useAuth';
 import Spinner from './Spinner';
 import toast from 'react-hot-toast';
+import { useToolActions } from '@/hooks/useToolActions';
+import useDebounce from '@/hooks/useDebounce';
+import Link from 'next/link';
 
 const ToolList = ({ onEdit }: { onEdit: (tool: any) => void }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { checkoutMutation, checkinMutation } = useToolActions();
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const { data: tools, isLoading, isError } = useQuery({
-    queryKey: ['tools'],
-    queryFn: () => api.get('/tools'),
+    queryKey: ['tools', debouncedSearchTerm],
+    queryFn: () => api.get('/tools', { params: { search: debouncedSearchTerm } }),
   });
 
   const deleteMutation = useMutation({
@@ -28,32 +35,6 @@ const ToolList = ({ onEdit }: { onEdit: (tool: any) => void }) => {
     }
   });
 
-  const checkoutMutation = useMutation({
-    mutationFn: (id: number) => {
-        return api.post(`/tools/${id}/checkout`);
-    },
-    onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['tools'] });
-        toast.success('Tool checked out successfully!');
-    },
-    onError: (error: any) => {
-        toast.error(error.response?.data?.message || 'An error occurred');
-    }
-  });
-
-    const checkinMutation = useMutation({
-        mutationFn: (id: number) => {
-            return api.post(`/tools/${id}/checkin`);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['tools'] });
-            toast.success('Tool checked in successfully!');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'An error occurred');
-        }
-    });
-
   if (isLoading) {
     return <Spinner />;
   }
@@ -64,26 +45,50 @@ const ToolList = ({ onEdit }: { onEdit: (tool: any) => void }) => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Tools</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Tools</h1>
+        <input
+          type="text"
+          placeholder="Search tools..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="p-2 border border-gray-300 rounded"
+        />
+      </div>
       <table className="min-w-full bg-white">
         <thead>
           <tr>
             <th className="py-2">Name</th>
+            <th className="py-2">Type</th>
             <th className="py-2">Description</th>
             <th className="py-2">Status</th>
             <th className="py-2">Condition</th>
-            {user?.role === 'admin' && <th className="py-2">Actions</th>}
+            <th className="py-2">Location</th>
+            {(user?.role === 'admin' || user?.role === 'manager') && <th className="py-2">Actions</th>}
             <th className="py-2">Availability Actions</th>
           </tr>
         </thead>
         <tbody>
           {tools?.data.map((tool: any) => (
             <tr key={tool.id}>
-              <td className="border px-4 py-2">{tool.name}</td>
+              <td className="border px-4 py-2">
+                <Link href={`/tools/${tool.id}`} className="text-blue-600 hover:underline">
+                  {tool.name}
+                </Link>
+              </td>
+              <td className="border px-4 py-2">{tool.type}</td>
               <td className="border px-4 py-2">{tool.description}</td>
               <td className="border px-4 py-2">{tool.status}</td>
-              <td className="border px-4 py-2">{tool.condition}</td>
-              {user?.role === 'admin' && (
+              <td className="border px-4 py-2">
+                {tool.condition}
+                {tool.status === 'in_use' && tool.bookings?.length > 0 && new Date(tool.bookings[0].endDate) < new Date() && (
+                    <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        Overdue
+                    </span>
+                )}
+              </td>
+              <td className="border px-4 py-2">{tool.location?.name}</td>
+              {(user?.role === 'admin' || user?.role === 'manager') && (
                 <td className="border px-4 py-2">
                   <button
                     className="bg-blue-500 text-white px-2 py-1 rounded mr-2"

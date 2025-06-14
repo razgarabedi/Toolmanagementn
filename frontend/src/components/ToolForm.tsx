@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import useAuth from '@/hooks/useAuth';
 import Spinner from './Spinner';
@@ -13,8 +13,16 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    type: '',
     status: 'available',
     condition: 'new',
+    purchaseDate: null,
+    locationId: null,
+  });
+
+  const { data: locations } = useQuery<any[]>({
+    queryKey: ['locations'],
+    queryFn: () => api.get('/locations').then(res => res.data),
   });
 
   useEffect(() => {
@@ -22,15 +30,21 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
       setFormData({
         name: tool.name,
         description: tool.description,
+        type: tool.type || '',
         status: tool.status,
         condition: tool.condition,
+        purchaseDate: tool.purchaseDate,
+        locationId: tool.locationId,
       });
     } else {
       setFormData({
         name: '',
         description: '',
+        type: '',
         status: 'available',
         condition: 'new',
+        purchaseDate: null,
+        locationId: null,
       });
     }
   }, [tool]);
@@ -51,7 +65,7 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
     }
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -67,32 +81,58 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
         <p className="text-red-500">{mutation.error.message}</p>
       )}
       <div className="mb-4">
-        <label className="block text-gray-700">Name</label>
+        <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">Name</label>
         <input
           type="text"
           name="name"
+          id="name"
           value={formData.name}
           onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded mt-1"
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700">Description</label>
+        <label htmlFor="type" className="block text-gray-700 text-sm font-bold mb-2">Type</label>
         <input
           type="text"
-          name="description"
-          value={formData.description}
+          name="type"
+          id="type"
+          value={formData.type}
           onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded mt-1"
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700">Status</label>
+        <label className="block mb-2">Location</label>
+        <select name="locationId" value={formData.locationId || ''} onChange={handleChange} className="w-full p-2 border rounded">
+            <option value="">Select a location</option>
+            {locations?.map(location => (
+                <option key={location.id} value={location.id}>{location.name}</option>
+            ))}
+        </select>
+      </div>
+      <div className="mb-4">
+        <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">Description</label>
+        <textarea
+          name="description"
+          id="description"
+          value={formData.description}
+          onChange={handleChange}
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block mb-2">Purchase Date</label>
+        <input type="date" name="purchaseDate" value={formData.purchaseDate ? formData.purchaseDate.split('T')[0] : ''} onChange={handleChange} className="w-full p-2 border rounded" />
+      </div>
+      <div className="mb-4">
+        <label htmlFor="status" className="block text-gray-700 text-sm font-bold mb-2">Status</label>
         <select
           name="status"
+          id="status"
           value={formData.status}
           onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded mt-1"
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
           <option value="available">Available</option>
           <option value="in_use">In Use</option>
@@ -100,12 +140,13 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
         </select>
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700">Condition</label>
+        <label htmlFor="condition" className="block text-gray-700 text-sm font-bold mb-2">Condition</label>
         <select
           name="condition"
+          id="condition"
           value={formData.condition}
           onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded mt-1"
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
           <option value="new">New</option>
           <option value="good">Good</option>
@@ -117,7 +158,7 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded flex justify-center items-center"
-          disabled={mutation.isPending || user?.role !== 'admin'}
+          disabled={mutation.isPending || !(user?.role === 'admin' || user?.role === 'manager')}
         >
           {mutation.isPending ? <Spinner /> : 'Save'}
         </button>

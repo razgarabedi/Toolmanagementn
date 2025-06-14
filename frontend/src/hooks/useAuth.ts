@@ -13,23 +13,41 @@ interface DecodedToken {
 const useAuth = () => {
   const [user, setUser] = useState<{ id: number; role: string; email: string; username: string; } | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
         const decodedToken: DecodedToken = jwtDecode(token);
-        setUser({ id: decodedToken.id, role: decodedToken.role, email: decodedToken.email, username: decodedToken.username });
-        setIsAuthenticated(true);
+        if (decodedToken.exp * 1000 > Date.now()) {
+          setUser({ id: decodedToken.id, role: decodedToken.role, email: decodedToken.email, username: decodedToken.username });
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('token');
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       } catch (error) {
         console.error('Invalid token:', error);
         setUser(null);
         setIsAuthenticated(false);
       }
     }
+    setLoading(false);
   }, []);
 
-  return { user, isAuthenticated };
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  const hasRole = (roles: string[]) => {
+    return user && roles.includes(user.role);
+  };
+
+  return { user, isAuthenticated, loading, logout, hasRole };
 };
 
 export default useAuth; 

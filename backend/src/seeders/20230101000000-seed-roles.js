@@ -12,6 +12,11 @@ module.exports = {
         name: 'user',
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        name: 'manager',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ], {});
   },

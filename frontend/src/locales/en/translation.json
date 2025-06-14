@@ -1,0 +1,29 @@
+{
+  "login": {
+    "title": "Login",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "button": "Login",
+    "loggingIn": "Logging in...",
+    "success": "Login successful!",
+    "error": "An error occurred."
+  },
+  "nav": {
+    "brand": "Werkzeugmeister Pro",
+    "dashboard": "Dashboard",
+    "managerDashboard": "Manager Dashboard",
+    "spareParts": "Spare Parts",
+    "locations": "Locations",
+    "reports": "Reports",
+    "tools": "Tools",
+    "scan": "Scan",
+    "myBookings": "My Bookings",
+    "calendar": "Calendar",
+    "admin": "Admin",
+    "profile": "Profile",
+    "welcome": "Welcome, {{username}}!",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register"
+  }
+} 

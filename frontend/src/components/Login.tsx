@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
+  const { t } = useTranslation();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -16,6 +20,8 @@ const Login = () => {
     },
     onSuccess: (data) => {
       localStorage.setItem('token', data.data.token);
+      router.push('/dashboard');
+      router.refresh();
     },
   });
 
@@ -31,15 +37,15 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center h-screen">
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
-        <h2 className="text-lg font-bold mb-4">Login</h2>
+        <h2 className="text-lg font-bold mb-4">{t('login.title')}</h2>
         {mutation.isError && (
-          <p className="text-red-500">{mutation.error.message}</p>
+          <p className="text-red-500">{t('login.error')}</p>
         )}
         {mutation.isSuccess && (
-          <p className="text-green-500">Login successful!</p>
+          <p className="text-green-500">{t('login.success')}</p>
         )}
         <div className="mb-4">
-          <label className="block text-gray-700">Email</label>
+          <label className="block text-gray-700">{t('login.emailLabel')}</label>
           <input
             type="email"
             name="email"
@@ -48,7 +54,7 @@ const Login = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Password</label>
+          <label className="block text-gray-700">{t('login.passwordLabel')}</label>
           <input
             type="password"
             name="password"
@@ -61,7 +67,7 @@ const Login = () => {
           className="w-full bg-blue-500 text-white p-2 rounded"
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? 'Logging in...' : 'Login'}
+          {mutation.isPending ? t('login.loggingIn') : t('login.button')}
         </button>
       </form>
     </div>
