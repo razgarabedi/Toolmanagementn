@@ -39,7 +39,7 @@ const MyBookingsPage = () => {
             queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
             toast.success('Booking cancelled successfully!');
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'An error occurred');
         }
     });
@@ -55,7 +55,7 @@ const MyBookingsPage = () => {
     }
 
     if (isError) {
-        return <div className="container mx-auto p-4">Error: {(error as any)?.response?.data?.message || 'Failed to fetch bookings'}</div>;
+        return <div className="container mx-auto p-4">Error: {(error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to fetch bookings'}</div>;
     }
 
     return (

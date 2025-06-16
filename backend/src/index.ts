@@ -12,6 +12,9 @@ import dashboardRoutes from './routes/dashboard';
 import sparePartRoutes from './routes/sparePart';
 import locationRoutes from './routes/location';
 import notificationRoutes from './routes/notification';
+import categoryRoutes from './routes/category';
+import manufacturerRoutes from './routes/manufacturer';
+import toolTypeRoutes from './routes/toolType';
 import { Role } from './models';
 
 dotenv.config();
@@ -38,6 +41,9 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/spare-parts', sparePartRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/manufacturers', manufacturerRoutes);
+app.use('/api/tool-types', toolTypeRoutes);
 
 app.get('/api/roles', async (req, res) => {
     try {
@@ -53,4 +59,6 @@ sequelize.sync().then(() => {
   app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
+}).catch((err) => {
+    console.error('Failed to sync database:', err);
 }); 

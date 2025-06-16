@@ -1,21 +1,35 @@
-import Link from 'next/link';
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import Login from '@/components/Login';
+import Register from '@/components/Register';
+import { useTranslation } from 'react-i18next';
+
+export default function StartPage() {
+  const [showLogin, setShowLogin] = useState(true);
+  const { t } = useTranslation();
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">Werkzeugmeister Pro</h1>
-      <p className="mt-4 text-lg">Professionelles Werkzeugmanagement</p>
-      <div className="mt-8 flex gap-4">
-        <Link href="/login" className="bg-blue-500 text-white px-4 py-2 rounded">
-          Login
-        </Link>
-        <Link href="/register" className="bg-gray-500 text-white px-4 py-2 rounded">
-          Register
-        </Link>
-        <Link href="/tools" className="bg-green-500 text-white px-4 py-2 rounded">
-          Manage Tools
-        </Link>
+    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
+      <div className="w-full max-w-md">
+        <div className="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+          <div className="mb-4 flex justify-around">
+            <button
+              className={`text-xl font-bold pb-2 ${showLogin ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}
+              onClick={() => setShowLogin(true)}
+            >
+              {t('login.title')}
+            </button>
+            <button
+              className={`text-xl font-bold pb-2 ${!showLogin ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}
+              onClick={() => setShowLogin(false)}
+            >
+              {t('register.title')}
+            </button>
+          </div>
+          {showLogin ? <Login /> : <Register />}
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

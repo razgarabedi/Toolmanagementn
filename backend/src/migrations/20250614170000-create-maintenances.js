@@ -49,6 +49,7 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
+    await queryInterface.removeConstraint('maintenances', 'maintenances_toolId_fkey').catch(() => {});
     await queryInterface.dropTable('maintenances');
   }
 }; 

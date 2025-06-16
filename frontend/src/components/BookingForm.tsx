@@ -33,7 +33,7 @@ const BookingForm = ({ toolId }: { toolId: number }) => {
             queryClient.invalidateQueries({ queryKey: ['tool-bookings', toolId] });
             toast.success('Tool booked successfully!');
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'An error occurred');
         }
     });
@@ -75,7 +75,7 @@ const BookingForm = ({ toolId }: { toolId: number }) => {
                     selectsEnd
                     startDate={startDate}
                     endDate={endDate}
-                    minDate={startDate}
+                    minDate={startDate || new Date()}
                     excludeDateIntervals={excludedDates}
                     className="w-full p-2 border border-gray-300 rounded"
                 />

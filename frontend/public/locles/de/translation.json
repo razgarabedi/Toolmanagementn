@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "brand": "Werkzeugverwaltung",
+    "dashboard": "Dashboard",
+    "managerDashboard": "Manager-Dashboard",
+    "spareParts": "Ersatzteile",
+    "locations": "Standorte",
+    "reports": "Berichte",
+    "tools": "Werkzeuge",
+    "scan": "Scannen",
+    "myBookings": "Meine Buchungen",
+    "calendar": "Buchungskalender",
+    "admin": "Admin",
+    "profile": "Profil",
+    "welcome": "Willkommen, {{username}}",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "register": "Registrieren"
+  },
+  "login": {
+    "title": "Anmelden",
+    "error": "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.",
+    "success": "Anmeldung erfolgreich!",
+    "emailLabel": "E-Mail",
+    "passwordLabel": "Passwort",
+    "loggingIn": "Anmelden...",
+    "button": "Anmelden"
+  }
+} 

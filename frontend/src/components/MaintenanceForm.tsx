@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -11,6 +11,13 @@ interface MaintenanceFormProps {
     maintenanceId?: number;
     onFormSubmit?: () => void;
     isRepairRequest?: boolean;
+}
+
+interface NewMaintenance {
+    toolId: number;
+    description: string;
+    cost: number;
+    status: string;
 }
 
 interface SparePart {
@@ -34,7 +41,7 @@ const MaintenanceForm = ({ toolId, maintenanceId, onFormSubmit, isRepairRequest 
     });
 
     const mutation = useMutation({
-        mutationFn: (newMaintenance: any) => 
+        mutationFn: (newMaintenance: NewMaintenance) => 
             maintenanceId 
                 ? api.put(`/maintenance/${maintenanceId}`, newMaintenance)
                 : api.post('/maintenance', newMaintenance),
@@ -51,7 +58,7 @@ const MaintenanceForm = ({ toolId, maintenanceId, onFormSubmit, isRepairRequest 
             toast.success(isRepairRequest ? 'Repair requested successfully!' : 'Maintenance scheduled successfully!');
             onFormSubmit?.();
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'An error occurred');
         }
     });

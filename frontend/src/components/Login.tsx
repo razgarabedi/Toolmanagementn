@@ -1,10 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import useAuth from '@/hooks/useAuth';
+
+interface Credentials {
+  email?: string;
+  password?: string;
+}
 
 const Login = () => {
   const { t } = useTranslation();
@@ -13,15 +19,21 @@ const Login = () => {
     email: '',
     password: '',
   });
+  const { isAuthenticated, login } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const mutation = useMutation({
-    mutationFn: (credentials: any) => {
+    mutationFn: (credentials: Credentials) => {
       return api.post('/auth/login', credentials);
     },
     onSuccess: (data) => {
-      localStorage.setItem('token', data.data.token);
+      login(data.data.token);
       router.push('/dashboard');
-      router.refresh();
     },
   });
 
@@ -49,6 +61,7 @@ const Login = () => {
           <input
             type="email"
             name="email"
+            autoComplete="email"
             onChange={handleChange}
             className="w-full p-2 border border-gray-300 rounded mt-1"
           />
@@ -58,6 +71,7 @@ const Login = () => {
           <input
             type="password"
             name="password"
+            autoComplete="current-password"
             onChange={handleChange}
             className="w-full p-2 border border-gray-300 rounded mt-1"
           />

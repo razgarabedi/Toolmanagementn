@@ -1,0 +1,41 @@
+{
+    "toolInstanceForm": {
+        "addTitle": "Neue Werkzeuginstanz hinzufügen",
+        "toolType": "Werkzeugtyp",
+        "selectToolType": "Werkzeugtyp auswählen",
+        "instanceName": "Instanzname (vom Typ)",
+        "rfid": "RFID Tag ID",
+        "serialNumber": "Seriennummer (Instanzspezifisch)",
+        "description": "Beschreibung (vom Typ)",
+        "instanceImage": "Instanzbild (überschreibt Typbild)",
+        "category": "Kategorie (vom Typ)",
+        "manufacturer": "Hersteller (vom Typ)",
+        "status": "Status",
+        "status.available": "Verfügbar",
+        "status.in_use": "In Gebrauch",
+        "status.in_maintenance": "In Wartung",
+        "status.booked": "Gebucht",
+        "condition": "Zustand",
+        "condition.new": "Neu",
+        "condition.good": "Gut",
+        "condition.fair": "Mittel",
+        "condition.poor": "Schlecht",
+        "purchaseDate": "Kaufdatum",
+        "cost": "Kaufkosten (€)",
+        "location": "Standort",
+        "selectLocation": "Standort auswählen",
+        "warrantyEndDate": "Garantieablaufdatum",
+        "attachments": "Anhänge",
+        "cancel": "Abbrechen",
+        "save": "Instanz hinzufügen",
+        "saveAndNew": "Speichern & Neu hinzufügen",
+        "createSuccess": "Werkzeuginstanz erfolgreich erstellt.",
+        "error": "Fehler beim Erstellen der Werkzeuginstanz."
+    },
+    "toolInstanceCard": {
+        "serialNumber": "Seriennummer: {{serialNumber}}",
+        "location": "Standort: {{location}}",
+        "checkout": "Ausbuchen",
+        "book": "Buchen"
+    }
+} 

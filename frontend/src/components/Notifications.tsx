@@ -14,7 +14,7 @@ interface Notification {
 }
 
 const Notifications = () => {
-    const { user, isAuthenticated } = useAuth();
+    const { isAuthenticated } = useAuth();
     const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
 

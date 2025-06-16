@@ -1,18 +1,17 @@
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('tools', 'currentOwnerId', {
+    await queryInterface.addColumn('tool_types', 'manufacturerId', {
       type: Sequelize.INTEGER,
-      allowNull: true,
       references: {
-        model: 'users',
-        key: 'id'
+        model: 'manufacturers',
+        key: 'id',
       },
       onUpdate: 'CASCADE',
-      onDelete: 'SET NULL'
+      onDelete: 'SET NULL',
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('tools', 'currentOwnerId');
-  }
+    await queryInterface.removeColumn('tool_types', 'manufacturerId');
+  },
 }; 

@@ -1,92 +1,104 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import api from '@/lib/api';
+import { useTranslation } from 'react-i18next';
+import Image from 'next/image';
 import Spinner from '@/components/Spinner';
-import BookingForm from '@/components/BookingForm';
-import useAuth from '@/hooks/useAuth';
-import useToolActions from '@/hooks/useToolActions';
-import MaintenanceForm from '@/components/MaintenanceForm';
-import MaintenanceHistory from '@/components/MaintenanceHistory';
+import { Circle, Wrench, CheckCircle, Edit, History, Bookmark } from 'lucide-react';
 
-const ToolDetailPage = () => {
-    const { id } = useParams();
-    const { user, hasRole } = useAuth();
-    const { checkout, checkin, loading: actionLoading } = useToolActions();
-    const router = useRouter();
+const ToolViewPage = () => {
+    const { t } = useTranslation();
+    const params = useParams();
+    const { id } = params;
+    const [activeTab, setActiveTab] = useState('details');
 
-    const { data: tool, isLoading, error } = useQuery({
+    const { data: tool, isLoading, isError } = useQuery({
         queryKey: ['tool', id],
-        queryFn: () => api.get(`/tools/${id}`).then(res => res.data)
+        queryFn: () => api.get(`/tools/${id}`).then(res => res.data),
+        enabled: !!id,
     });
 
-    if (isLoading) return <div className="flex justify-center items-center h-screen"><Spinner /></div>;
-    if (error) return <div>Error loading tool details.</div>;
+    if (isLoading) return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
+    if (isError) return <div className="text-center mt-10">{t('tool.loadError')}</div>;
+    if (!tool) return null;
 
-    const statusColor = tool.status === 'available' ? 'bg-green-500' :
-                        tool.status === 'in_use' ? 'bg-yellow-500' :
-                        tool.status === 'in_maintenance' ? 'bg-red-500' :
-                        'bg-gray-500';
+    const { toolType } = tool;
+
+    const detailItems = [
+        { label: t('tool.description'), value: toolType.description },
+        { label: t('tool.location'), value: tool.location?.name },
+        { label: t('tool.manufacturer'), value: toolType.manufacturer },
+        { label: t('tool.purchaseDate'), value: tool.purchaseDate ? new Date(tool.purchaseDate).toLocaleDateString() : 'N/A' },
+        { label: t('tool.cost'), value: tool.cost ? `${tool.cost.toFixed(2)} €` : 'N/A' },
+        { label: t('tool.warrantyEndDate'), value: tool.warrantyEndDate ? new Date(tool.warrantyEndDate).toLocaleDateString() : 'N/A' },
+    ];
+    
+    const actionButtons = [
+        { label: t('tool.directCheckout'), icon: CheckCircle, color: 'purple' },
+        { label: t('tool.requestBooking'), icon: Bookmark, color: 'white' },
+        { label: t('tool.logMaintenance'), icon: Wrench, color: 'white' },
+        { label: t('tool.editTool'), icon: Edit, color: 'white' },
+        { label: t('tool.lifecycle'), icon: History, color: 'white' },
+    ];
 
     return (
-        <div className="container mx-auto p-4">
-            <button onClick={() => router.back()} className="mb-4 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded">
-                &larr; Back to List
-            </button>
-            <div className="bg-white p-6 rounded shadow-md">
-                <h1 className="text-3xl font-bold mb-4">{tool.name}</h1>
-                <p className="mb-4">{tool.description}</p>
-                <p><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-white ${statusColor}`}>{tool.status}</span></p>
-                <p><strong>Condition:</strong> {tool.condition}</p>
-                {tool.type && <p><strong>Type:</strong> {tool.type}</p>}
-                {tool.location && <p><strong>Location:</strong> {tool.location.name}</p>}
-                {tool.purchaseDate && <p><strong>Age:</strong> {`${Math.floor((new Date() - new Date(tool.purchaseDate)) / (1000 * 60 * 60 * 24 * 365.25))} years old`}</p>}
-                <p><strong>Usage Count:</strong> {tool.usageCount || 0}</p>
-            </div>
-            {tool.currentOwner && (
-                <div className="mt-4">
-                    <p>Currently checked out by: <strong>{tool.currentOwner.username}</strong></p>
-                </div>
-            )}
-            <div className="mt-6 flex space-x-4">
-                {tool.status === 'available' && (
-                    <button 
-                        onClick={() => checkout(Number(id))} 
-                        disabled={actionLoading} 
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                    >
-                        {actionLoading ? 'Processing...' : 'Check-out'}
-                    </button>
-                )}
-                 {tool.status === 'in_use' && tool.currentOwnerId === user?.id && (
-                    <button 
-                        onClick={() => checkin(Number(id))} 
-                        disabled={actionLoading}
-                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-                    >
-                        {actionLoading ? 'Processing...' : 'Check-in'}
-                    </button>
-                )}
-            </div>
-            
-            <div className="mt-8">
-                <BookingForm toolId={Number(id)} />
-            </div>
+        <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-1">
+                        <div className="relative w-full h-80 rounded-lg overflow-hidden">
+                            <Image src={toolType.image || '/images/tools/default.jpg'} alt={toolType.name} layout="fill" objectFit="cover" />
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2">
+                        <div className="flex justify-between items-start">
+                            <h1 className="text-3xl font-bold">{toolType.name}</h1>
+                            <Circle size={24} className="text-green-500" />
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                            <p><strong>{t('tool.type')}:</strong> {toolType.category}</p>
+                            <p><strong>{t('tool.rfid')}:</strong> {tool.rfid}</p>
+                            <p><strong>{t('tool.category')}/{t('tool.serialNumber')}:</strong> {tool.serialNumber}</p>
+                        </div>
+                        
+                        <div className="mt-6 border-b border-gray-200">
+                            <nav className="flex space-x-4">
+                                <button onClick={() => setActiveTab('details')} className={`py-2 px-1 font-semibold ${activeTab === 'details' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('tool.tabs.details')}</button>
+                                <button onClick={() => setActiveTab('bookings')} className={`py-2 px-1 font-semibold ${activeTab === 'bookings' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('tool.tabs.bookings')}</button>
+                                <button onClick={() => setActiveTab('maintenance')} className={`py-2 px-1 font-semibold ${activeTab === 'maintenance' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('tool.tabs.maintenance')}</button>
+                                <button onClick={() => setActiveTab('attachments')} className={`py-2 px-1 font-semibold ${activeTab === 'attachments' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('tool.tabs.attachments')}</button>
+                            </nav>
+                        </div>
 
-            {(hasRole(['admin', 'manager'])) && (
-                 <div className="mt-8">
-                    <h2 className="text-2xl font-bold mb-2">Maintenance</h2>
-                    <MaintenanceForm toolId={Number(id)} />
+                        <div className="mt-6">
+                            {activeTab === 'details' && (
+                                <div className="space-y-4">
+                                    {detailItems.map(item => (
+                                        <div key={item.label}>
+                                            <p className="font-semibold">{item.label}</p>
+                                            <p className="text-gray-600">{item.value}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            )}
-           
-            <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-2">Maintenance History</h2>
-                <MaintenanceHistory toolId={Number(id)} />
+
+                <div className="mt-8 pt-6 border-t border-gray-200 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {actionButtons.map(btn => (
+                        <button key={btn.label} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold ${btn.color === 'purple' ? 'bg-purple-600 text-white' : 'bg-white border border-gray-300'}`}>
+                            <btn.icon size={16} />
+                            <span>{btn.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     );
 };
 
-export default ToolDetailPage; 
+export default ToolViewPage; 

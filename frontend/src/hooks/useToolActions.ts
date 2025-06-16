@@ -13,7 +13,7 @@ export const useToolActions = () => {
             queryClient.invalidateQueries({ queryKey: ['tools'] });
             toast.success('Tool checked out successfully!');
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'An error occurred');
         }
     });
@@ -26,7 +26,7 @@ export const useToolActions = () => {
             queryClient.invalidateQueries({ queryKey: ['tools'] });
             toast.success('Tool checked in successfully!');
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'An error occurred');
         }
     });

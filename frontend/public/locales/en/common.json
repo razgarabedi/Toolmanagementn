@@ -1,0 +1,41 @@
+{
+    "toolInstanceForm": {
+        "addTitle": "Add New Tool Instance",
+        "toolType": "Tool Type",
+        "selectToolType": "Select Tool Type",
+        "instanceName": "Instance Name (from Type)",
+        "rfid": "RFID Tag ID",
+        "serialNumber": "Serial Number (Instance Specific)",
+        "description": "Description (from Type)",
+        "instanceImage": "Instance Image (Overrides Type Image)",
+        "category": "Category (from Type)",
+        "manufacturer": "Manufacturer (from Type)",
+        "status": "Status",
+        "status.available": "Available",
+        "status.in_use": "In Use",
+        "status.in_maintenance": "In Maintenance",
+        "status.booked": "Booked",
+        "condition": "Condition",
+        "condition.new": "New",
+        "condition.good": "Good",
+        "condition.fair": "Fair",
+        "condition.poor": "Poor",
+        "purchaseDate": "Purchase Date",
+        "cost": "Cost (€)",
+        "location": "Location",
+        "selectLocation": "Select Location",
+        "warrantyEndDate": "Warranty End Date",
+        "attachments": "Attachments",
+        "cancel": "Cancel",
+        "save": "Add Instance",
+        "saveAndNew": "Save & Add New",
+        "createSuccess": "Tool instance created successfully.",
+        "error": "Error creating tool instance."
+    },
+    "toolInstanceCard": {
+        "serialNumber": "Serial No: {{serialNumber}}",
+        "location": "Location: {{location}}",
+        "checkout": "Checkout",
+        "book": "Book"
+    }
+} 

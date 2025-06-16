@@ -36,19 +36,19 @@ const ReportsPage = () => {
     const { data: maintenanceCostReport, isLoading: maintenanceLoading } = useQuery<MaintenanceCostReportItem[]>({
         queryKey: ['maintenanceCostReport'],
         queryFn: () => api.get('/dashboard/reports/maintenance-cost').then(res => res.data),
-        enabled: isAuthenticated && isAuthorized,
+        enabled: !!(isAuthenticated && isAuthorized),
     });
     
     const { data: utilizationReport, isLoading: utilizationLoading } = useQuery<UtilizationReportItem[]>({
         queryKey: ['utilizationReport'],
         queryFn: () => api.get('/dashboard/reports/utilization').then(res => res.data),
-        enabled: isAuthenticated && isAuthorized,
+        enabled: !!(isAuthenticated && isAuthorized),
     });
     
     const { data: missingToolsReport, isLoading: missingToolsLoading } = useQuery<MissingToolReportItem[]>({
         queryKey: ['missingToolsReport'],
         queryFn: () => api.get('/dashboard/reports/missing-tools').then(res => res.data),
-        enabled: isAuthenticated && isAuthorized,
+        enabled: !!(isAuthenticated && isAuthorized),
     });
 
     useEffect(() => {

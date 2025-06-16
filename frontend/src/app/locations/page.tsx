@@ -23,7 +23,7 @@ const LocationsPage = () => {
     const { data: locations, isLoading } = useQuery<Location[]>({
         queryKey: ['locations'],
         queryFn: () => api.get('/locations').then(res => res.data),
-        enabled: isAuthenticated && isAuthorized,
+        enabled: !!(isAuthenticated && isAuthorized),
     });
 
     const createMutation = useMutation({

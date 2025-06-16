@@ -37,6 +37,11 @@ Werkzeugmeister Pro is a comprehensive tool management solution designed for pro
     -   Clean, responsive interface with Tailwind CSS.
     -   Loading states and non-intrusive toast notifications for user actions.
 
+## Default Admin User
+A default admin user is created when the database is seeded.
+-   **Username:** admin
+-   **Password:** adminpassword
+
 ## Deployment on Ubuntu with Nginx
 
 This guide covers deploying the Werkzeugmeister Pro application on an Ubuntu server using PM2 to manage the Node.js backend process and Nginx as a reverse proxy.

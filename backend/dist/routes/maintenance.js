@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const maintenance_1 = require("../controllers/maintenance");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.post('/', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], maintenance_1.createMaintenance);
+router.get('/tool/:toolId', auth_1.auth, maintenance_1.getToolMaintenanceHistory);
+router.put('/:id', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], maintenance_1.updateMaintenance);
+exports.default = router;

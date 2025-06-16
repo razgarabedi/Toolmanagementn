@@ -6,31 +6,59 @@ import api from '@/lib/api';
 import useAuth from '@/hooks/useAuth';
 import Spinner from './Spinner';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
-const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void }) => {
+interface Tool {
+    id: number;
+    toolTypeId: string;
+    status: string;
+    condition: string;
+    purchaseDate: string | null;
+    locationId: string | null;
+}
+
+interface Location {
+    id: number;
+    name: string;
+}
+
+interface ToolType {
+    id: number;
+    name: string;
+}
+
+const ToolForm = ({ tool, onFormSubmit }: { tool?: Tool, onFormSubmit: () => void }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    type: '',
+  const [formData, setFormData] = useState<{
+    toolTypeId: string;
+    status: string;
+    condition: string;
+    purchaseDate: string | null;
+    locationId: string | null;
+  }>({
+    toolTypeId: '',
     status: 'available',
     condition: 'new',
     purchaseDate: null,
     locationId: null,
   });
 
-  const { data: locations } = useQuery<any[]>({
+  const { data: locations } = useQuery<Location[]>({
     queryKey: ['locations'],
     queryFn: () => api.get('/locations').then(res => res.data),
+  });
+
+  const { data: toolTypes } = useQuery<ToolType[]>({
+    queryKey: ['tool-types'],
+    queryFn: () => api.get('/tool-types').then(res => res.data),
   });
 
   useEffect(() => {
     if (tool) {
       setFormData({
-        name: tool.name,
-        description: tool.description,
-        type: tool.type || '',
+        toolTypeId: tool.toolTypeId || '',
         status: tool.status,
         condition: tool.condition,
         purchaseDate: tool.purchaseDate,
@@ -38,9 +66,7 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
       });
     } else {
       setFormData({
-        name: '',
-        description: '',
-        type: '',
+        toolTypeId: '',
         status: 'available',
         condition: 'new',
         purchaseDate: null,
@@ -50,7 +76,7 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
   }, [tool]);
 
   const mutation = useMutation({
-    mutationFn: (newTool: any) => {
+    mutationFn: (newTool: Partial<Tool>) => {
       return tool
         ? api.put(`/tools/${tool.id}`, newTool)
         : api.post('/tools', newTool);
@@ -58,10 +84,10 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tools'] });
       onFormSubmit();
-      toast.success(`Tool ${tool ? 'updated' : 'created'} successfully!`);
+      toast.success(tool ? t('toolForm.updateSuccess') : t('toolForm.createSuccess'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'An error occurred');
+    onError: (error: { response?: { data?: { message?: string } }, message?: string }) => {
+      toast.error(error.response?.data?.message || t('toolForm.error'));
     }
   });
 
@@ -76,82 +102,61 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
-      <h2 className="text-lg font-bold mb-4">{tool ? 'Edit Tool' : 'Add New Tool'}</h2>
+      <h2 className="text-lg font-bold mb-4">{tool ? t('toolForm.editTitle') : t('toolForm.addTitle')}</h2>
       {mutation.isError && (
-        <p className="text-red-500">{mutation.error.message}</p>
+        <p className="text-red-500">{ (mutation.error as { response?: { data?: { message?: string } }, message?: string }).message}</p>
       )}
       <div className="mb-4">
-        <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">Name</label>
-        <input
-          type="text"
-          name="name"
-          id="name"
-          value={formData.name}
-          onChange={handleChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        />
+        <label className="block mb-2">{t('toolForm.toolTypeLabel')}</label>
+        <select name="toolTypeId" value={formData.toolTypeId} onChange={handleChange} className="w-full p-2 border rounded" required>
+            <option value="">{t('toolForm.selectToolType')}</option>
+            {toolTypes?.map(toolType => (
+                <option key={toolType.id} value={toolType.id}>{toolType.name}</option>
+            ))}
+        </select>
       </div>
       <div className="mb-4">
-        <label htmlFor="type" className="block text-gray-700 text-sm font-bold mb-2">Type</label>
-        <input
-          type="text"
-          name="type"
-          id="type"
-          value={formData.type}
-          onChange={handleChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block mb-2">Location</label>
-        <select name="locationId" value={formData.locationId || ''} onChange={handleChange} className="w-full p-2 border rounded">
-            <option value="">Select a location</option>
+        <label className="block mb-2">{t('toolForm.locationLabel')}</label>
+        <select name="locationId" value={formData.locationId || ''} onChange={handleChange} className="w-full p-2 border rounded" autoComplete="off">
+            <option value="">{t('toolForm.selectLocation')}</option>
             {locations?.map(location => (
                 <option key={location.id} value={location.id}>{location.name}</option>
             ))}
         </select>
       </div>
       <div className="mb-4">
-        <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">Description</label>
-        <textarea
-          name="description"
-          id="description"
-          value={formData.description}
-          onChange={handleChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        />
+        <label className="block mb-2">{t('toolForm.purchaseDateLabel')}</label>
+        <input type="date" name="purchaseDate" value={formData.purchaseDate ? formData.purchaseDate.split('T')[0] : ''} onChange={handleChange} className="w-full p-2 border rounded" autoComplete="off" />
       </div>
       <div className="mb-4">
-        <label className="block mb-2">Purchase Date</label>
-        <input type="date" name="purchaseDate" value={formData.purchaseDate ? formData.purchaseDate.split('T')[0] : ''} onChange={handleChange} className="w-full p-2 border rounded" />
-      </div>
-      <div className="mb-4">
-        <label htmlFor="status" className="block text-gray-700 text-sm font-bold mb-2">Status</label>
+        <label htmlFor="status" className="block text-gray-700 text-sm font-bold mb-2">{t('toolForm.statusLabel')}</label>
         <select
           name="status"
           id="status"
           value={formData.status}
           onChange={handleChange}
+          autoComplete="off"
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
-          <option value="available">Available</option>
-          <option value="in_use">In Use</option>
-          <option value="in_maintenance">In Maintenance</option>
+          <option value="available">{t('toolForm.status.available')}</option>
+          <option value="in_use">{t('toolForm.status.in_use')}</option>
+          <option value="in_maintenance">{t('toolForm.status.in_maintenance')}</option>
         </select>
       </div>
       <div className="mb-4">
-        <label htmlFor="condition" className="block text-gray-700 text-sm font-bold mb-2">Condition</label>
+        <label htmlFor="condition" className="block text-gray-700 text-sm font-bold mb-2">{t('toolForm.conditionLabel')}</label>
         <select
           name="condition"
           id="condition"
           value={formData.condition}
           onChange={handleChange}
+          autoComplete="off"
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
-          <option value="new">New</option>
-          <option value="good">Good</option>
-          <option value="fair">Fair</option>
-          <option value="poor">Poor</option>
+          <option value="new">{t('toolForm.condition.new')}</option>
+          <option value="good">{t('toolForm.condition.good')}</option>
+          <option value="fair">{t('toolForm.condition.fair')}</option>
+          <option value="poor">{t('toolForm.condition.poor')}</option>
         </select>
       </div>
       <div className="flex gap-2">
@@ -160,7 +165,7 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
           className="w-full bg-blue-500 text-white p-2 rounded flex justify-center items-center"
           disabled={mutation.isPending || !(user?.role === 'admin' || user?.role === 'manager')}
         >
-          {mutation.isPending ? <Spinner /> : 'Save'}
+          {mutation.isPending ? <Spinner /> : t('toolForm.saveButton')}
         </button>
         {tool && (
             <button
@@ -168,7 +173,7 @@ const ToolForm = ({ tool, onFormSubmit }: { tool?: any, onFormSubmit: () => void
                 className="w-full bg-gray-500 text-white p-2 rounded"
                 onClick={onFormSubmit}
             >
-                Cancel
+                {t('toolForm.cancelButton')}
             </button>
         )}
       </div>

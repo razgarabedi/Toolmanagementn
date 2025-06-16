@@ -37,6 +37,18 @@ const useAuth = () => {
     setLoading(false);
   }, []);
 
+  const login = (token: string) => {
+    try {
+      const decodedToken: DecodedToken = jwtDecode(token);
+      setUser({ id: decodedToken.id, role: decodedToken.role, email: decodedToken.email, username: decodedToken.username });
+      setIsAuthenticated(true);
+      localStorage.setItem('token', token);
+    } catch (error) {
+      console.error('Invalid token:', error);
+      logout();
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
@@ -47,7 +59,7 @@ const useAuth = () => {
     return user && roles.includes(user.role);
   };
 
-  return { user, isAuthenticated, loading, logout, hasRole };
+  return { user, isAuthenticated, loading, login, logout, hasRole };
 };
 
 export default useAuth; 

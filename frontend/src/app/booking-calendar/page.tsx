@@ -19,6 +19,17 @@ interface Booking {
         id: number;
         name: string;
     };
+    user: {
+        username: string;
+    };
+}
+
+interface EventType {
+    id: number;
+    title: string;
+    start: Date;
+    end: Date;
+    resource: string;
 }
 
 const localizer = momentLocalizer(moment);
@@ -49,7 +60,7 @@ const BookingCalendarPage = () => {
         })) || [];
     }, [bookings]);
     
-    const eventStyleGetter = (event: any) => {
+    const eventStyleGetter = (event: EventType) => {
         const status = event.resource;
         let backgroundColor = '#3174ad'; // Default for 'booked'
         if (status === 'active') {
@@ -65,7 +76,7 @@ const BookingCalendarPage = () => {
     }
 
     if (isError) {
-        return <div className="container mx-auto p-4">Error: {(error as any)?.response?.data?.message || 'Failed to fetch bookings'}</div>;
+        return <div className="container mx-auto p-4">Error: {(error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to fetch bookings'}</div>;
     }
 
     return (

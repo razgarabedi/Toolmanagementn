@@ -1,0 +1,298 @@
+{
+  "nav": {
+    "brand": "Tool Management",
+    "dashboard": "Dashboard",
+    "tools": "Inventory",
+    "bookings": "Bookings",
+    "calendarView": "Calendar View",
+    "maintenance": "Maintenance",
+    "spareParts": "Spare Parts",
+    "toolLifecycle": "Tool Lifecycle",
+    "commissioning": "Commissioning",
+    "users": "Users",
+    "reports": "Reports",
+    "missingTools": "Missing Tools",
+    "settings": "Settings",
+    "scan": "Scan",
+    "profile": "Profile",
+    "welcome": "Welcome, {{username}}",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register"
+  },
+  "login": {
+    "title": "Login",
+    "error": "Login failed. Please check your credentials.",
+    "success": "Login successful!",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "loggingIn": "Logging in...",
+    "button": "Login"
+  },
+  "register": {
+    "title": "Register",
+    "success": "Registration successful!",
+    "usernameLabel": "Username",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "registering": "Registering...",
+    "button": "Register",
+    "errorPrefix": "Registration failed:"
+  },
+  "toolList": {
+    "title": "Tools",
+    "searchPlaceholder": "Search tools...",
+    "name": "Name",
+    "type": "Type",
+    "description": "Description",
+    "status": "Status",
+    "condition": "Condition",
+    "location": "Location",
+    "actions": "Actions",
+    "availabilityActions": "Availability Actions",
+    "overdue": "Overdue",
+    "edit": "Edit",
+    "delete": "Delete",
+    "checkOut": "Check Out",
+    "checkIn": "Check In",
+    "deleteSuccess": "Tool deleted successfully!",
+    "error": "An error occurred",
+    "errorFething": "Error fetching tools"
+  },
+  "toolForm": {
+    "addTitle": "Add New Tool",
+    "editTitle": "Edit Tool",
+    "toolTypeLabel": "Tool Type",
+    "selectToolType": "Select a tool type",
+    "statusLabel": "Status",
+    "conditionLabel": "Condition",
+    "purchaseDateLabel": "Purchase Date",
+    "locationLabel": "Location",
+    "selectLocation": "Select a location",
+    "status": {
+      "available": "Available",
+      "in_use": "In Use",
+      "in_maintenance": "In Maintenance"
+    },
+    "condition": {
+      "new": "New",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    },
+    "saveButton": "Save",
+    "cancelButton": "Cancel",
+    "createSuccess": "Tool created successfully!",
+    "updateSuccess": "Tool updated successfully!",
+    "error": "An error occurred"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "roleUpdateSuccess": "User role updated successfully!",
+    "error": "An error occurred.",
+    "errorFetching": "Error fetching data.",
+    "cantChangeOwnRole": "Admins cannot change their own role.",
+    "userManagement": {
+      "title": "User Management",
+      "username": "Username",
+      "email": "Email",
+      "role": "Role"
+    },
+    "overdueTools": {
+      "title": "Overdue Tools",
+      "tool": "Tool",
+      "user": "User",
+      "dueDate": "Due Date",
+      "noOverdue": "No overdue tools."
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{username}}!",
+    "checkedOutTools": {
+      "title": "My Checked-Out Tools",
+      "condition": "Condition",
+      "noTools": "You have no tools checked out."
+    },
+    "upcomingBookings": {
+      "title": "My Upcoming Bookings",
+      "from": "From",
+      "to": "To",
+      "noBookings": "You have no upcoming bookings."
+    }
+  },
+  "managerDashboard": {
+    "title": "Manager Dashboard",
+    "notAuthorized": "You are not authorized to view this page.",
+    "inventory": {
+      "title": "Inventory Summary",
+      "available": "Available",
+      "inUse": "In Use",
+      "inMaintenance": "In Maintenance",
+      "booked": "Booked"
+    },
+    "maintenance": {
+      "title": "Maintenance Status",
+      "scheduled": "Scheduled",
+      "inProgress": "In Progress",
+      "completed": "Completed"
+    },
+    "utilization": {
+      "title": "Top 5 Most Used Tools",
+      "bookings": "{{count}} bookings",
+      "noData": "No utilization data available."
+    }
+  },
+  "scanner": {
+    "title": "Scan Tool Barcode/QR Code",
+    "scanAgainButton": "Scan Again",
+    "error": {
+      "title": "Error",
+      "toolNotFound": "Tool not found"
+    },
+    "tool": {
+      "status": "Status",
+      "condition": "Condition",
+      "checkOutButton": "Check Out",
+      "checkInButton": "Check In",
+      "cancelButton": "Cancel"
+    }
+  },
+  "tools": {
+    "loadError": "Error loading tool types.",
+    "viewMode": "View Mode",
+    "available": "available",
+    "checkedOut": "checked out",
+    "total": "total",
+    "instanceSearchPlaceholder": "Search instances (RFID/Serial No.)",
+    "scan": "Scan tool",
+    "newToolInstance": "New tool instance",
+    "search": {
+      "title": "Search",
+      "placeholder": "Search tool type or instance..."
+    },
+    "status": {
+      "title": "Status",
+      "all": "All statuses"
+    },
+    "category": {
+      "title": "Category",
+      "all": "All categories"
+    },
+    "typeFilter": {
+      "title": "Filter by Type",
+      "all": "All tool types"
+    }
+  },
+  "bookings": {
+    "loadError": "Error loading bookings.",
+    "viewOptions": "View Options",
+    "bookedBy": "Booked by",
+    "period": "Period",
+    "bookedOn": "Booked on",
+    "notes": "Notes",
+    "approvalPending": "Approval pending",
+    "approve": "Approve",
+    "decline": "Decline",
+    "checkedOut": "Checked out",
+    "checkIn": "Check in",
+    "search": {
+      "title": "Search",
+      "placeholder": "Tool, RFID, user..."
+    },
+    "status": {
+      "title": "Status",
+      "all": "All"
+    },
+    "user": {
+      "title": "User",
+      "all": "All"
+    }
+  },
+  "calendar": {
+    "selectTool": "Select a tool",
+    "pleaseSelectTool": "Please select a tool to see its availability.",
+    "selectDay": "Select a day to create a booking.",
+    "previousMonth": "Previous",
+    "nextMonth": "Next",
+    "today": "Today",
+    "pastDay": "Past",
+    "availableDay": "Available"
+  },
+  "toolInstance": {
+    "serialNumber": "S/N: {{serialNumber}}",
+    "location": "Location: {{location}}",
+    "checkout": "Check Out",
+    "book": "Book"
+  },
+  "toolInstanceForm": {
+    "addTitle": "Add New Tool Instance",
+    "editTitle": "Edit Tool Instance",
+    "toolType": "Tool Type",
+    "selectToolType": "Select a tool type",
+    "instanceName": "Instance Name",
+    "rfid": "RFID",
+    "serialNumber": "Serial Number",
+    "description": "Description",
+    "instanceImage": "Instance Image",
+    "category": "Category",
+    "manufacturer": "Manufacturer",
+    "status": "Status",
+    "condition": "Condition",
+    "purchaseDate": "Purchase Date",
+    "cost": "Cost",
+    "location": "Location",
+    "selectLocation": "Select a location",
+    "warrantyEndDate": "Warranty End Date",
+    "attachments": "Attachments",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveAndNew": "Save & New",
+    "createSuccess": "Tool instance created successfully!",
+    "error": "An error occurred",
+    "status": {
+      "available": "Available",
+      "in_use": "In Use",
+      "in_maintenance": "In Maintenance",
+      "booked": "Booked"
+    },
+    "condition": {
+      "new": "New",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    }
+  },
+  "categoryForm": {
+    "title": "Create New Category",
+    "nameLabel": "Category Name",
+    "createSuccess": "Category created successfully!",
+    "error": "Error creating category"
+  },
+  "manufacturerForm": {
+    "title": "Create New Manufacturer",
+    "nameLabel": "Manufacturer Name",
+    "createSuccess": "Manufacturer created successfully!",
+    "error": "Error creating manufacturer"
+  },
+  "toolTypeForm": {
+    "title": "Create New Tool Type",
+    "nameLabel": "Tool Type Name",
+    "descriptionLabel": "Description",
+    "categoryLabel": "Category",
+    "selectCategory": "Select a category",
+    "manufacturerLabel": "Manufacturer",
+    "selectManufacturer": "Select a manufacturer",
+    "imageLabel": "Image",
+    "createSuccess": "Tool type created successfully!",
+    "error": "Error creating tool type"
+  },
+  "common": {
+    "notAvailable": "N/A",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "profile": {
+    "title": "User Profile",
+    "wip": "This page is a work in progress."
+  }
+} 

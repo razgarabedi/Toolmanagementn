@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const dashboard_1 = require("../controllers/dashboard");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.get('/inventory', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getInventorySummary);
+router.get('/maintenance', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getMaintenanceSummary);
+router.get('/utilization', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getUtilizationSummary);
+router.get('/reports/maintenance-cost', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getMaintenanceCostReport);
+router.get('/reports/utilization', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getUtilizationReport);
+router.get('/reports/missing-tools', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getMissingToolsReport);
+exports.default = router;

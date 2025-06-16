@@ -51,6 +51,7 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
+    await queryInterface.removeConstraint('bookings', 'bookings_toolId_fkey').catch(() => {});
     await queryInterface.dropTable('bookings');
   }
 }; 

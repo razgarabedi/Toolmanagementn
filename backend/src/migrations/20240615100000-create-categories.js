@@ -1,8 +1,7 @@
 'use strict';
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('locations', {
+    await queryInterface.createTable('categories', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -23,21 +22,8 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
-
-    await queryInterface.addColumn('tools', 'locationId', {
-      type: Sequelize.INTEGER,
-      references: {
-        model: 'locations',
-        key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-      allowNull: true,
-    });
   },
-
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('tools', 'locationId');
-    await queryInterface.dropTable('locations');
+    await queryInterface.dropTable('categories');
   }
 }; 

@@ -1,40 +1,105 @@
 import { Request, Response } from 'express';
-import { Tool, Booking, User } from '../models';
-import { Op } from 'sequelize';
+import { Tool, Booking, User, ToolType, Location, Attachment } from '../models';
+import { Op, ValidationError, UniqueConstraintError, ForeignKeyConstraintError } from 'sequelize';
 import { AuthRequest } from '../middleware/auth';
 import sequelize from '../db';
-import { Location } from '../models';
 import { Notification } from '../models';
 
+export const getToolTypes = async (req: Request, res: Response) => {
+    try {
+        const toolTypes = await ToolType.findAll({
+            include: [{
+                model: Tool,
+                as: 'instances',
+                include: [
+                    { model: User, as: 'currentOwner', attributes: ['id', 'username'] }
+                ]
+            }],
+            order: [['createdAt', 'DESC']],
+        });
+        res.status(200).json(toolTypes);
+    } catch (error) {
+        console.error("Error fetching tool types:", error);
+        res.status(500).json({ message: 'Something went wrong', error });
+    }
+};
+
 export const createTool = async (req: AuthRequest, res: Response) => {
-  try {
-    const { name, description, status, condition, type, purchaseDate, locationId } = req.body;
-    const tool = await Tool.create({
-      name,
-      description,
-      status,
-      condition,
-      type,
-      purchaseDate,
-      locationId,
-    });
-    res.status(201).json(tool);
-  } catch (error) {
-    res.status(500).json({ message: 'Something went wrong' });
-  }
+    const t = await sequelize.transaction();
+    try {
+        const { toolTypeId, rfid, serialNumber, status, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
+
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        const instanceImage = files.instanceImage ? files.instanceImage[0].path : undefined;
+
+        const tool = await Tool.create({
+            toolTypeId,
+            rfid,
+            serialNumber,
+            status,
+            condition,
+            purchaseDate: purchaseDate || null,
+            cost,
+            warrantyEndDate: warrantyEndDate || null,
+            locationId,
+            manufacturerId,
+            description,
+            name,
+            instanceImage,
+        }, { transaction: t });
+
+        if (files.attachments) {
+            const attachments = files.attachments.map(file => ({
+                fileName: file.originalname,
+                filePath: file.path,
+                toolId: tool.id
+            }));
+            await Attachment.bulkCreate(attachments, { transaction: t });
+        }
+
+        await t.commit();
+        const result = await Tool.findByPk(tool.id, { include: ['attachments']});
+        res.status(201).json(result);
+    } catch (error: any) {
+        await t.rollback();
+        if (error instanceof ValidationError || error instanceof UniqueConstraintError) {
+            return res.status(400).json({
+                message: "Validation Error",
+                errors: (error as any).errors.map((e: any) => ({
+                    field: e.path,
+                    message: e.message
+                }))
+            });
+        }
+        if (error instanceof ForeignKeyConstraintError) {
+            return res.status(400).json({
+                message: "Invalid reference to another entity",
+                error: {
+                    field: (error as any).fields[0],
+                }
+            });
+        }
+        console.error("Error creating tool:", error);
+        if (error.message.includes('File upload only supports')) {
+            return res.status(400).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Error creating tool', error });
+    }
 };
 
 export const getTools = async (req: Request, res: Response) => {
   try {
     const { search } = req.query;
     const whereClause: any = {};
-    if (search) {
-      whereClause.name = { [Op.like]: `%${search}%` };
-    }
 
     const tools = await Tool.findAll({
       where: whereClause,
       include: [
+        { 
+            model: ToolType, 
+            as: 'toolType',
+            where: search ? { name: { [Op.like]: `%${search}%` } } : undefined
+        },
         { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
         { model: Booking, as: 'bookings' },
         { model: Location, as: 'location', attributes: ['id', 'name'] }
@@ -50,7 +115,14 @@ export const getTools = async (req: Request, res: Response) => {
 export const getTool = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tool = await Tool.findByPk(id);
+    const tool = await Tool.findByPk(id, {
+        include: [
+            { model: ToolType, as: 'toolType' },
+            { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
+            { model: Booking, as: 'bookings' },
+            { model: Location, as: 'location', attributes: ['id', 'name'] }
+        ]
+    });
     if (!tool) {
       return res.status(404).json({ message: 'Tool not found' });
     }
@@ -63,16 +135,37 @@ export const getTool = async (req: Request, res: Response) => {
 export const updateTool = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, status, condition, type, purchaseDate, locationId } = req.body;
+    const { toolTypeId, rfid, serialNumber, status, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
     const tool = await Tool.findByPk(id);
     if (tool) {
-      await tool.update({ name, description, status, condition, type, purchaseDate, locationId });
+      await tool.update({ toolTypeId, rfid, serialNumber, status, condition, purchaseDate: purchaseDate || null, cost, warrantyEndDate: warrantyEndDate || null, locationId, manufacturerId, description, name });
       res.status(200).json(tool);
     } else {
       res.status(404).json({ message: 'Tool not found' });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Something went wrong' });
+  } catch (error: any) {
+    if (error instanceof ValidationError || error instanceof UniqueConstraintError) {
+        return res.status(400).json({
+            message: "Validation Error",
+            errors: (error as any).errors.map((e: any) => ({
+                field: e.path,
+                message: e.message
+            }))
+        });
+    }
+    if (error instanceof ForeignKeyConstraintError) {
+        return res.status(400).json({
+            message: "Invalid reference to another entity",
+            error: {
+                field: (error as any).fields[0],
+            }
+        });
+    }
+    console.error("Error updating tool:", error);
+    if (error.message.includes('File upload only supports')) {
+        return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Error updating tool' });
   }
 };
 
@@ -186,13 +279,15 @@ export const checkinTool = async (req: AuthRequest, res: Response) => {
     tool.usageCount = (tool.usageCount || 0) + 1;
     await tool.save();
 
+    const toolWithType = await Tool.findByPk(tool.id, { include: [{ model: ToolType, as: 'toolType' }] });
+
     // Notify admin (user ID 1)
     await Notification.create({
         userId: 1, // Assuming admin user has ID 1
-        message: `Tool "${tool.name}" has been checked in by user #${userId}.`
+        message: `Tool "${(toolWithType as any).toolType.name}" has been checked in by user #${userId}.`
     });
 
-    res.status(200).json(tool);
+    res.status(200).json(toolWithType);
   } catch (error) {
     res.status(500).json({ message: 'Something went wrong' });
   }
@@ -203,9 +298,11 @@ export const getMyCheckedOutTools = async (req: AuthRequest, res: Response) => {
         const userId = req.user.id;
         const tools = await Tool.findAll({ 
             where: { currentOwnerId: userId },
+            include: [{ model: ToolType, as: 'toolType' }]
         });
         res.status(200).json(tools);
     } catch (error) {
+        console.error("Error in getMyCheckedOutTools:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
 } 

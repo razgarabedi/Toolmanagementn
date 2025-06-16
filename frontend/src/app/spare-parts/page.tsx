@@ -25,7 +25,7 @@ const SparePartsPage = () => {
     const { data: spareParts, isLoading } = useQuery<SparePart[]>({
         queryKey: ['spareParts'],
         queryFn: () => api.get('/spare-parts').then(res => res.data),
-        enabled: isAuthenticated && isAuthorized,
+        enabled: !!(isAuthenticated && isAuthorized),
     });
 
     const createMutation = useMutation({

@@ -7,6 +7,10 @@ import { SparePart } from './sparePart';
 import { MaintenanceSparePart } from './maintenanceSparePart';
 import { Location } from './location';
 import { Notification } from './notification';
+import { ToolType } from './toolType';
+import { Attachment } from './attachment';
+import { Category } from './category';
+import { Manufacturer } from './manufacturer';
 
 const models = {
   User,
@@ -18,6 +22,10 @@ const models = {
   MaintenanceSparePart,
   Location,
   Notification,
+  ToolType,
+  Category,
+  Manufacturer,
+  Attachment,
 };
 
 Object.values(models).forEach((model: any) => {
@@ -26,5 +34,5 @@ Object.values(models).forEach((model: any) => {
   }
 });
 
-export { User, Tool, Role, Booking, Maintenance, SparePart, MaintenanceSparePart, Location, Notification };
+export { User, Tool, Role, Booking, Maintenance, SparePart, MaintenanceSparePart, Location, Notification, ToolType, Category, Manufacturer, Attachment };
 export default models; 

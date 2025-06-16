@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Tool, Maintenance, Booking } from '../models';
+import { Tool, Maintenance, Booking, ToolType } from '../models';
 import sequelize from '../db';
 import { Op } from 'sequelize';
 
@@ -92,10 +92,14 @@ export const getUtilizationReport = async (req: Request, res: Response) => {
     try {
         const tools = await Tool.findAll({
             attributes: [
-                'id', 
-                'name',
+                'id',
                 'usageCount',
             ],
+            include: [{
+                model: ToolType,
+                as: 'toolType',
+                attributes: ['name']
+            }],
         });
 
         const bookings = await Booking.findAll({
@@ -113,7 +117,7 @@ export const getUtilizationReport = async (req: Request, res: Response) => {
 
         const report = tools.map(tool => ({
             id: tool.id,
-            name: tool.name,
+            name: (tool as any).toolType.name,
             usageCount: tool.usageCount,
             totalDuration: durationMap[tool.id] || 0
         }));

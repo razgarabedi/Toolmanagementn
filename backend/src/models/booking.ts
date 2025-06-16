@@ -24,6 +24,11 @@ class Booking extends Model<BookingAttributes, BookingCreationAttributes> implem
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  public static associate(models: any) {
+    Booking.belongsTo(models.Tool, { foreignKey: 'toolId', as: 'tool' });
+    Booking.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+  }
 }
 
 Booking.init(
@@ -67,8 +72,5 @@ Booking.init(
     sequelize,
   }
 );
-
-Booking.belongsTo(Tool, { foreignKey: 'toolId', as: 'tool' });
-Booking.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 export default Booking; 

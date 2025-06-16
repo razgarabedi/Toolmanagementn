@@ -4,9 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Spinner from '@/components/Spinner';
 import useAuth from '@/hooks/useAuth';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 interface Tool {
     id: number;
@@ -26,8 +25,8 @@ interface Booking {
 }
 
 const UserDashboard = () => {
+    const { t } = useTranslation();
     const { user, isAuthenticated, loading: authLoading } = useAuth();
-    const router = useRouter();
 
     const { data: checkedOutTools, isLoading: toolsLoading } = useQuery<Tool[]>({
         queryKey: ['my-tools'],
@@ -41,12 +40,6 @@ const UserDashboard = () => {
         enabled: isAuthenticated,
     });
 
-    useEffect(() => {
-        if (!authLoading && !isAuthenticated) {
-            router.push('/login');
-        }
-    }, [isAuthenticated, authLoading, router]);
-
     if (authLoading || toolsLoading || bookingsLoading) {
         return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
     }
@@ -55,40 +48,40 @@ const UserDashboard = () => {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Welcome, {user?.username}!</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('dashboard.welcome', { username: user?.username })}</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h2 className="text-xl font-bold mb-4">My Checked-Out Tools</h2>
+                    <h2 className="text-xl font-bold mb-4">{t('dashboard.checkedOutTools.title')}</h2>
                     <div className="bg-white p-6 rounded shadow-md">
                         {checkedOutTools && checkedOutTools.length > 0 ? (
                              <ul className="divide-y divide-gray-200">
                                 {checkedOutTools.map(tool => (
                                     <li key={tool.id} className="py-4">
                                         <Link href={`/tools/${tool.id}`} className="text-blue-600 hover:underline font-semibold">{tool.name}</Link>
-                                        <p>Condition: {tool.condition}</p>
+                                        <p>{t('dashboard.checkedOutTools.condition')}: {tool.condition}</p>
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <p>You have no tools checked out.</p>
+                            <p>{t('dashboard.checkedOutTools.noTools')}</p>
                         )}
                     </div>
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold mb-4">My Upcoming Bookings</h2>
+                    <h2 className="text-xl font-bold mb-4">{t('dashboard.upcomingBookings.title')}</h2>
                     <div className="bg-white p-6 rounded shadow-md">
                         {upcomingBookings && upcomingBookings.length > 0 ? (
                              <ul className="divide-y divide-gray-200">
                                 {upcomingBookings.map(booking => (
                                     <li key={booking.id} className="py-4">
                                         <Link href={`/tools/${booking.tool.id}`} className="text-blue-600 hover:underline font-semibold">{booking.tool.name}</Link>
-                                        <p>From: {new Date(booking.startDate).toLocaleDateString()}</p>
-                                        <p>To: {new Date(booking.endDate).toLocaleDateString()}</p>
+                                        <p>{t('dashboard.upcomingBookings.from')}: {new Date(booking.startDate).toLocaleDateString()}</p>
+                                        <p>{t('dashboard.upcomingBookings.to')}: {new Date(booking.endDate).toLocaleDateString()}</p>
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <p>You have no upcoming bookings.</p>
+                            <p>{t('dashboard.upcomingBookings.noBookings')}</p>
                         )}
                     </div>
                 </div>

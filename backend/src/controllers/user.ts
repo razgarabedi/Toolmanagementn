@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User, Role } from '../models';
+import { AuthRequest } from '../middleware/auth';
 
 export const getUsers = async (req: Request, res: Response) => {
     try {
@@ -13,10 +14,15 @@ export const getUsers = async (req: Request, res: Response) => {
     }
 };
 
-export const updateUserRole = async (req: Request, res: Response) => {
+export const updateUserRole = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { roleId } = req.body;
+        const currentUserId = req.user.id;
+
+        if (parseInt(id, 10) === currentUserId) {
+            return res.status(403).json({ message: 'Admins cannot change their own role.' });
+        }
 
         const user = await User.findByPk(id);
         if (!user) {

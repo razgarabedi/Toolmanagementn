@@ -7,10 +7,12 @@ import api from '@/lib/api';
 import { useToolActions } from '@/hooks/useToolActions';
 import Spinner from '@/components/Spinner';
 import { IDetectedBarcode } from '@yudiel/react-qr-scanner';
+import { useTranslation } from 'react-i18next';
 
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then(mod => mod.Scanner), { ssr: false });
 
 const ScannerPage = () => {
+    const { t } = useTranslation();
     const [scannedId, setScannedId] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(true);
     const { checkoutMutation, checkinMutation } = useToolActions();
@@ -28,7 +30,7 @@ const ScannerPage = () => {
         }
     };
 
-    const handleError = (error: any) => {
+    const handleError = (error: unknown) => {
         console.error('QR Scanner Error:', error);
     };
 
@@ -42,7 +44,7 @@ const ScannerPage = () => {
             checkoutMutation.mutate(tool.data.id, {
                 onSuccess: handleReset
             });
-        } else {
+        } else if (tool) {
             checkinMutation.mutate(tool.data.id, {
                 onSuccess: handleReset
             });
@@ -51,7 +53,7 @@ const ScannerPage = () => {
 
     return (
         <div className="container mx-auto p-4 flex flex-col items-center">
-            <h1 className="text-2xl font-bold mb-4">Scan Tool Barcode/QR Code</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('scanner.title')}</h1>
             
             {isScanning && (
                 <div style={{ width: '500px' }}>
@@ -67,9 +69,9 @@ const ScannerPage = () => {
             
             {isError && (
                  <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
-                    <p><strong>Error:</strong> {(error as any)?.response?.data?.message || 'Tool not found'}</p>
+                    <p><strong>{t('scanner.error.title')}:</strong> {(error as { response?: { data?: { message?: string } } })?.response?.data?.message || t('scanner.error.toolNotFound')}</p>
                     <button onClick={handleReset} className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
-                        Scan Again
+                        {t('scanner.scanAgainButton')}
                     </button>
                 </div>
             )}
@@ -77,20 +79,20 @@ const ScannerPage = () => {
             {tool && (
                 <div className="mt-4 p-4 bg-gray-100 rounded text-center">
                     <h2 className="text-xl font-semibold">{tool.data.name}</h2>
-                    <p><strong>Status:</strong> {tool.data.status}</p>
-                    <p><strong>Condition:</strong> {tool.data.condition}</p>
+                    <p><strong>{t('scanner.tool.status')}:</strong> {tool.data.status}</p>
+                    <p><strong>{t('scanner.tool.condition')}:</strong> {tool.data.condition}</p>
                     <div className="mt-4">
                         {tool.data.status === 'available' ? (
                             <button onClick={handleAction} className="bg-green-500 text-white px-4 py-2 rounded mr-2">
-                                Check Out
+                                {t('scanner.tool.checkOutButton')}
                             </button>
                         ) : (
                              <button onClick={handleAction} className="bg-yellow-500 text-white px-4 py-2 rounded mr-2">
-                                Check In
+                                {t('scanner.tool.checkInButton')}
                             </button>
                         )}
                         <button onClick={handleReset} className="bg-gray-500 text-white px-4 py-2 rounded">
-                            Cancel
+                            {t('scanner.tool.cancelButton')}
                         </button>
                     </div>
                 </div>

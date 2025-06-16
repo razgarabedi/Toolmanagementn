@@ -10,11 +10,11 @@ module.exports = {
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       description: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       status: {
         type: Sequelize.ENUM('available', 'in_use', 'in_maintenance'),

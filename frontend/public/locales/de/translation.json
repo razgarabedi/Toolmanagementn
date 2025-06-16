@@ -1,0 +1,298 @@
+{
+  "nav": {
+    "brand": "Werkzeugverwaltung",
+    "dashboard": "Dashboard",
+    "tools": "Werkzeugbestand",
+    "bookings": "Buchungen",
+    "calendarView": "Kalenderansicht",
+    "maintenance": "Wartung",
+    "spareParts": "Ersatzteile",
+    "toolLifecycle": "Werkzeuglebenszyklus",
+    "commissioning": "Kommissionierung",
+    "users": "Benutzer",
+    "reports": "Berichte",
+    "missingTools": "Fehlende Werkzeuge",
+    "settings": "Einstellungen",
+    "scan": "Scannen",
+    "profile": "Profil",
+    "welcome": "Willkommen, {{username}}",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "register": "Registrieren"
+  },
+  "login": {
+    "title": "Anmelden",
+    "error": "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.",
+    "success": "Anmeldung erfolgreich!",
+    "emailLabel": "E-Mail",
+    "passwordLabel": "Passwort",
+    "loggingIn": "Anmelden...",
+    "button": "Anmelden"
+  },
+  "register": {
+    "title": "Registrieren",
+    "success": "Registrierung erfolgreich!",
+    "usernameLabel": "Benutzername",
+    "emailLabel": "E-Mail",
+    "passwordLabel": "Passwort",
+    "registering": "Registrieren...",
+    "button": "Registrieren",
+    "errorPrefix": "Registrierung fehlgeschlagen:"
+  },
+  "toolList": {
+    "title": "Werkzeuge",
+    "searchPlaceholder": "Werkzeuge suchen...",
+    "name": "Name",
+    "type": "Typ",
+    "description": "Beschreibung",
+    "status": "Status",
+    "condition": "Zustand",
+    "location": "Standort",
+    "actions": "Aktionen",
+    "availabilityActions": "Verfügbarkeitsaktionen",
+    "overdue": "Überfällig",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "checkOut": "Auschecken",
+    "checkIn": "Einchecken",
+    "deleteSuccess": "Werkzeug erfolgreich gelöscht!",
+    "error": "Ein Fehler ist aufgetreten",
+    "errorFething": "Fehler beim Abrufen der Werkzeuge"
+  },
+  "toolForm": {
+    "addTitle": "Neues Werkzeug hinzufügen",
+    "editTitle": "Werkzeug bearbeiten",
+    "toolTypeLabel": "Werkzeugtyp",
+    "selectToolType": "Wählen Sie einen Werkzeugtyp aus",
+    "statusLabel": "Status",
+    "conditionLabel": "Zustand",
+    "purchaseDateLabel": "Kaufdatum",
+    "locationLabel": "Standort",
+    "selectLocation": "Wählen Sie einen Standort",
+    "status": {
+      "available": "Verfügbar",
+      "in_use": "In Benutzung",
+      "in_maintenance": "In Wartung"
+    },
+    "condition": {
+      "new": "Neu",
+      "good": "Gut",
+      "fair": "Mittelmäßig",
+      "poor": "Schlecht"
+    },
+    "saveButton": "Speichern",
+    "cancelButton": "Abbrechen",
+    "createSuccess": "Werkzeug erfolgreich erstellt!",
+    "updateSuccess": "Werkzeug erfolgreich aktualisiert!",
+    "error": "Ein Fehler ist aufgetreten"
+  },
+  "admin": {
+    "title": "Admin-Dashboard",
+    "roleUpdateSuccess": "Benutzerrolle erfolgreich aktualisiert!",
+    "error": "Ein Fehler ist aufgetreten.",
+    "errorFetching": "Fehler beim Abrufen der Daten.",
+    "cantChangeOwnRole": "Admins können ihre eigene Rolle nicht ändern.",
+    "userManagement": {
+      "title": "Benutzerverwaltung",
+      "username": "Benutzername",
+      "email": "E-Mail",
+      "role": "Rolle"
+    },
+    "overdueTools": {
+      "title": "Überfällige Werkzeuge",
+      "tool": "Werkzeug",
+      "user": "Benutzer",
+      "dueDate": "Fälligkeitsdatum",
+      "noOverdue": "Keine überfälligen Werkzeuge."
+    }
+  },
+  "dashboard": {
+    "welcome": "Willkommen, {{username}}!",
+    "checkedOutTools": {
+      "title": "Meine ausgecheckten Werkzeuge",
+      "condition": "Zustand",
+      "noTools": "Sie haben keine Werkzeuge ausgecheckt."
+    },
+    "upcomingBookings": {
+      "title": "Meine bevorstehenden Buchungen",
+      "from": "Von",
+      "to": "Bis",
+      "noBookings": "Sie haben keine bevorstehenden Buchungen."
+    }
+  },
+  "managerDashboard": {
+    "title": "Manager-Dashboard",
+    "notAuthorized": "Sie sind nicht berechtigt, diese Seite anzuzeigen.",
+    "inventory": {
+      "title": "Bestandsübersicht",
+      "available": "Verfügbar",
+      "inUse": "In Benutzung",
+      "inMaintenance": "In Wartung",
+      "booked": "Gebucht"
+    },
+    "maintenance": {
+      "title": "Wartungsstatus",
+      "scheduled": "Geplant",
+      "inProgress": "In Bearbeitung",
+      "completed": "Abgeschlossen"
+    },
+    "utilization": {
+      "title": "Top 5 meistgenutzte Werkzeuge",
+      "bookings": "{{count}} Buchungen",
+      "noData": "Keine Nutzungsdaten verfügbar."
+    }
+  },
+  "scanner": {
+    "title": "Werkzeug-Barcode/QR-Code scannen",
+    "scanAgainButton": "Erneut scannen",
+    "error": {
+      "title": "Fehler",
+      "toolNotFound": "Werkzeug nicht gefunden"
+    },
+    "tool": {
+      "status": "Status",
+      "condition": "Zustand",
+      "checkOutButton": "Auschecken",
+      "checkInButton": "Einchecken",
+      "cancelButton": "Abbrechen"
+    }
+  },
+  "tools": {
+    "loadError": "Fehler beim Laden der Werkzeugtypen.",
+    "viewMode": "Ansichtsmodus",
+    "available": "verfügb.",
+    "checkedOut": "angez.",
+    "total": "Ges. Typ",
+    "instanceSearchPlaceholder": "Instanzen suchen (RFID/Seriennr.)",
+    "scan": "Werkzeug scannen",
+    "newToolInstance": "Neue Werkzeuginstanz hinzufügen",
+    "search": {
+      "title": "Suchen",
+      "placeholder": "Nach Werkzeugtyp oder Instanz suchen..."
+    },
+    "status": {
+      "title": "Status",
+      "all": "Alle Status"
+    },
+    "category": {
+      "title": "Kategorie",
+      "all": "Alle Kategorien"
+    },
+    "typeFilter": {
+      "title": "Nach Typ filtern",
+      "all": "Alle Werkzeugtypen"
+    }
+  },
+  "bookings": {
+    "loadError": "Fehler beim Laden der Buchungen.",
+    "viewOptions": "Ansichtsoptionen",
+    "bookedBy": "Gebucht von",
+    "period": "Zeitraum",
+    "bookedOn": "Gebucht am",
+    "notes": "Notizen",
+    "approvalPending": "Genehmigung ausstehend",
+    "approve": "Genehmigen",
+    "decline": "Ablehnen",
+    "checkedOut": "Ausgecheckt",
+    "checkIn": "Einchecken",
+    "search": {
+      "title": "Suchen",
+      "placeholder": "Werkzeug, RFID, Benutzer..."
+    },
+    "status": {
+      "title": "Status",
+      "all": "Alle"
+    },
+    "user": {
+      "title": "Benutzer",
+      "all": "Alle"
+    }
+  },
+  "calendar": {
+    "selectTool": "Werkzeug auswählen",
+    "pleaseSelectTool": "Bitte wählen Sie ein Werkzeug aus, um dessen Verfügbarkeit anzuzeigen.",
+    "selectDay": "Wählen Sie einen Tag aus, um eine Buchung zu erstellen.",
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "today": "Heute",
+    "pastDay": "Vergangen",
+    "availableDay": "Verfügbar"
+  },
+  "toolInstance": {
+    "serialNumber": "S/N: {{serialNumber}}",
+    "location": "Standort: {{location}}",
+    "checkout": "Auschecken",
+    "book": "Buchen"
+  },
+  "toolInstanceForm": {
+    "addTitle": "Neue Werkzeuginstanz hinzufügen",
+    "editTitle": "Werkzeuginstanz bearbeiten",
+    "toolType": "Werkzeugtyp",
+    "selectToolType": "Wählen Sie einen Werkzeugtyp",
+    "instanceName": "Instanzname",
+    "rfid": "RFID",
+    "serialNumber": "Seriennummer",
+    "description": "Beschreibung",
+    "instanceImage": "Instanzbild",
+    "category": "Kategorie",
+    "manufacturer": "Hersteller",
+    "status": "Status",
+    "condition": "Zustand",
+    "purchaseDate": "Kaufdatum",
+    "cost": "Kosten",
+    "location": "Standort",
+    "selectLocation": "Wählen Sie einen Standort",
+    "warrantyEndDate": "Garantieendedatum",
+    "attachments": "Anhänge",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saveAndNew": "Speichern & Neu",
+    "createSuccess": "Werkzeuginstanz erfolgreich erstellt!",
+    "error": "Ein Fehler ist aufgetreten",
+    "status": {
+      "available": "Verfügbar",
+      "in_use": "In Benutzung",
+      "in_maintenance": "In Wartung",
+      "booked": "Gebucht"
+    },
+    "condition": {
+      "new": "Neu",
+      "good": "Gut",
+      "fair": "Mittelmäßig",
+      "poor": "Schlecht"
+    }
+  },
+  "categoryForm": {
+    "title": "Neue Kategorie erstellen",
+    "nameLabel": "Kategoriename",
+    "createSuccess": "Kategorie erfolgreich erstellt!",
+    "error": "Fehler beim Erstellen der Kategorie"
+  },
+  "manufacturerForm": {
+    "title": "Neuen Hersteller erstellen",
+    "nameLabel": "Herstellername",
+    "createSuccess": "Hersteller erfolgreich erstellt!",
+    "error": "Fehler beim Erstellen des Herstellers"
+  },
+  "toolTypeForm": {
+    "title": "Neuen Werkzeugtyp erstellen",
+    "nameLabel": "Name des Werkzeugtyps",
+    "descriptionLabel": "Beschreibung",
+    "categoryLabel": "Kategorie",
+    "selectCategory": "Wählen Sie eine Kategorie aus",
+    "manufacturerLabel": "Hersteller",
+    "selectManufacturer": "Wählen Sie einen Hersteller aus",
+    "imageLabel": "Bild",
+    "createSuccess": "Werkzeugtyp erfolgreich erstellt!",
+    "error": "Fehler beim Erstellen des Werkzeugtyps"
+  },
+  "common": {
+    "notAvailable": "N/A",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  },
+  "profile": {
+    "title": "Benutzerprofil",
+    "wip": "Diese Seite befindet sich im Aufbau."
+  }
+} 

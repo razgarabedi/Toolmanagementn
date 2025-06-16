@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Booking, Tool, Notification } from '../models';
+import { Booking, Tool, Notification, ToolType } from '../models';
 import { Op } from 'sequelize';
 import { AuthRequest } from '../middleware/auth';
 
@@ -59,9 +59,17 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 export const getUserBookings = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
-        const bookings = await Booking.findAll({ where: { userId }, include: ['tool'] });
+        const bookings = await Booking.findAll({ 
+            where: { userId }, 
+            include: [{ 
+                model: Tool, 
+                as: 'tool',
+                include: [{ model: ToolType, as: 'toolType' }]
+            }] 
+        });
         res.status(200).json(bookings);
     } catch (error) {
+        console.error("Error in getUserBookings:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
 }
@@ -80,7 +88,7 @@ export const getAllBookings = async (req: Request, res: Response) => {
     try {
         const bookings = await Booking.findAll({ 
             where: { status: {[Op.ne]: 'cancelled'} },
-            include: ['tool'] 
+            include: ['tool', 'user'] 
         });
         res.status(200).json(bookings);
     } catch (error) {
@@ -97,10 +105,22 @@ export const getOverdueBookings = async (req: Request, res: Response) => {
                     [Op.lt]: new Date()
                 }
             },
-            include: ['tool', 'user']
+            include: [
+                {
+                    model: Tool,
+                    as: 'tool',
+                    include: [{ model: ToolType, as: 'toolType' }]
+                },
+                {
+                    model: (Booking as any).sequelize.models.User,
+                    as: 'user',
+                    attributes: ['id', 'username']
+                }
+            ]
         });
         res.status(200).json(overdueBookings);
     } catch (error) {
+        console.error("Error in getOverdueBookings:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
 }
