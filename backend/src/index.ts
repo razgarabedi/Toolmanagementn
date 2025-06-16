@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import sequelize from './db';
+import path from 'path';
 import './models';
 import authRoutes from './routes/auth';
 import toolRoutes from './routes/tool';
@@ -27,6 +28,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Werkzeugmeister Pro API');

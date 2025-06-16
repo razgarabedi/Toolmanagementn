@@ -9,18 +9,18 @@ interface SafeImageProps extends ImageProps {
 
 const SafeImage = (props: SafeImageProps) => {
   const { src, fallbackSrc, ...rest } = props;
-  const [imgSrc, setImgSrc] = useState(src);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    setImgSrc(src);
+    setError(false);
   }, [src]);
 
   return (
     <Image
       {...rest}
-      src={imgSrc || fallbackSrc}
+      src={error ? fallbackSrc : src || fallbackSrc}
       onError={() => {
-        setImgSrc(fallbackSrc);
+        setError(true);
       }}
     />
   );
