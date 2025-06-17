@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import Spinner from '@/components/Spinner';
 import { Circle, Wrench, CheckCircle, Edit, History, Bookmark, X } from 'lucide-react';
 import SafeImage from '@/components/SafeImage';
 import { getImageUrl } from '@/lib/utils';
+import BookingForm from './BookingForm';
+import toast from 'react-hot-toast';
 
 interface ToolPreviewModalProps {
   toolId: number;
@@ -17,12 +19,35 @@ interface ToolPreviewModalProps {
 const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
     const { t, i18n } = useTranslation('common');
     const [activeTab, setActiveTab] = useState('details');
+    const [showBookingForm, setShowBookingForm] = useState(false);
+    const queryClient = useQueryClient();
 
-    const { data: tool, isLoading, isError } = useQuery({
+    const { data: tool, isLoading, isError, refetch } = useQuery({
         queryKey: ['tool', toolId],
         queryFn: () => api.get(`/tools/${toolId}`).then(res => res.data),
         enabled: !!toolId,
     });
+
+    const checkoutMutation = useMutation({
+        mutationFn: () => api.post(`/tools/${toolId}/checkout`),
+        onSuccess: () => {
+            toast.success(t('tool.checkoutSuccess'));
+            queryClient.invalidateQueries({ queryKey: ['tool', toolId] });
+            queryClient.invalidateQueries({ queryKey: ['tools'] });
+            onClose();
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || t('tool.checkoutError'));
+        }
+    });
+
+    const handleCheckout = () => {
+        if (tool.status === 'available' || tool.status === 'booked') {
+            checkoutMutation.mutate();
+        } else {
+            toast.error(t('tool.notAvailableForCheckout'));
+        }
+    };
 
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
@@ -66,6 +91,16 @@ const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
             { label: t('tool.lifecycle'), icon: History, color: 'white' },
         ];
 
+        const getStatusIndicator = (status: string) => {
+            switch (status) {
+                case 'available': return <Circle size={24} className="text-green-500" />;
+                case 'in_use': return <Circle size={24} className="text-yellow-500" />;
+                case 'in_maintenance': return <Circle size={24} className="text-red-500" />;
+                case 'booked': return <Circle size={24} className="text-purple-500" />;
+                default: return <Circle size={24} className="text-gray-500" />;
+            }
+        }
+
         return (
             <>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -84,7 +119,7 @@ const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
                     <div className="lg:col-span-2">
                         <div className="flex justify-between items-start">
                             <h1 className="text-3xl font-bold">{tool.name || toolType.name}</h1>
-                            <Circle size={24} className="text-green-500" />
+                            {getStatusIndicator(tool.status)}
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                             <p><strong>{t('tool.type')}:</strong> {toolType.category?.name}</p>
@@ -117,13 +152,32 @@ const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-gray-200 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {actionButtons.map(btn => (
+                    <button onClick={handleCheckout} disabled={tool.status !== 'available'} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-purple-600 text-white disabled:bg-gray-400`}>
+                        <CheckCircle size={16} />
+                        <span>{t('tool.directCheckout')}</span>
+                    </button>
+                    <button onClick={() => setShowBookingForm(true)} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-white border border-gray-300`}>
+                        <Bookmark size={16} />
+                        <span>{t('tool.requestBooking')}</span>
+                    </button>
+                    {actionButtons.slice(2).map(btn => (
                         <button key={btn.label} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold ${btn.color === 'purple' ? 'bg-purple-600 text-white' : 'bg-white border border-gray-300'}`}>
                             <btn.icon size={16} />
                             <span>{btn.label}</span>
                         </button>
                     ))}
                 </div>
+
+                {showBookingForm && (
+                    <BookingForm
+                        toolId={toolId}
+                        onClose={() => setShowBookingForm(false)}
+                        onSuccess={() => {
+                            setShowBookingForm(false);
+                            refetch();
+                        }}
+                    />
+                )}
             </>
         )
     }

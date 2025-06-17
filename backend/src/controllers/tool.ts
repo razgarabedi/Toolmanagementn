@@ -1,9 +1,15 @@
 import { Request, Response } from 'express';
-import { Tool, Booking, User, ToolType, Location, Attachment, Manufacturer } from '../models';
+import { Tool, Booking, User, ToolType, Location, Attachment, Manufacturer, Maintenance } from '../models';
 import { Op, ValidationError, UniqueConstraintError, ForeignKeyConstraintError } from 'sequelize';
 import { AuthRequest } from '../middleware/auth';
 import sequelize from '../db';
 import { Notification } from '../models';
+
+// Add this interface to augment the tool type
+interface ToolWithAssociations extends Tool {
+    maintenances?: Maintenance[];
+    bookings?: Booking[];
+}
 
 export const getToolTypes = async (req: Request, res: Response) => {
     try {
@@ -27,7 +33,7 @@ export const getToolTypes = async (req: Request, res: Response) => {
 export const createTool = async (req: AuthRequest, res: Response) => {
     const t = await sequelize.transaction();
     try {
-        const { toolTypeId, rfid, serialNumber, status, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
+        const { toolTypeId, rfid, serialNumber, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
 
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const instanceImage = files?.instanceImage ? files.instanceImage[0].path : undefined;
@@ -43,7 +49,6 @@ export const createTool = async (req: AuthRequest, res: Response) => {
             toolTypeId: parseInt(toolTypeId, 10),
             rfid,
             serialNumber,
-            status,
             condition,
             purchaseDate: (purchaseDate && !isNaN(new Date(purchaseDate).getTime())) ? purchaseDate : null,
             cost: (cost && !isNaN(parseFloat(cost))) ? parseFloat(cost) : null,
@@ -96,51 +101,134 @@ export const createTool = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getTools = async (req: Request, res: Response) => {
-  try {
-    const { search } = req.query;
-    const whereClause: any = {};
+const calculateToolStatus = (tool: ToolWithAssociations) => {
+    const now = new Date();
+    let status: 'available' | 'in_use' | 'in_maintenance' | 'booked' = 'available';
 
-    const tools = await Tool.findAll({
-      where: whereClause,
-      include: [
-        { 
-            model: ToolType, 
-            as: 'toolType',
-            where: search ? { name: { [Op.like]: `%${search}%` } } : undefined
-        },
-        { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
-        { model: Booking, as: 'bookings' },
-        { model: Location, as: 'location', attributes: ['id', 'name'] },
-        { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] }
-      ],
-      order: [['createdAt', 'DESC']],
-    });
-    res.status(200).json(tools);
-  } catch (error) {
-    res.status(500).json({ message: 'Something went wrong' });
-  }
+    const hasActiveMaintenance = tool.maintenances?.some((m: Maintenance) =>
+        m.status === 'in_progress' && new Date(m.startDate) <= now && (!m.endDate || new Date(m.endDate) >= now)
+    );
+    if (hasActiveMaintenance) {
+        return 'in_maintenance';
+    }
+
+    const hasActiveBooking = tool.bookings?.some((b: Booking) =>
+        b.status === 'active' && new Date(b.startDate) <= now && new Date(b.endDate) >= now
+    );
+    if (hasActiveBooking) {
+        return 'in_use';
+    }
+
+    const isBookedNow = tool.bookings?.some((b: Booking) =>
+        b.status === 'booked' && new Date(b.startDate) <= now && new Date(b.endDate) >= now
+    );
+    if (isBookedNow) {
+        return 'booked';
+    }
+    
+    const hasUpcomingBooking = tool.bookings?.some((b: Booking) =>
+        b.status === 'booked' && new Date(b.startDate) > now
+    );
+    if (hasUpcomingBooking) {
+        return 'booked';
+    }
+
+    const hasUpcomingMaintenance = tool.maintenances?.some((m: Maintenance) =>
+        m.status === 'scheduled' && new Date(m.startDate) > now
+    );
+    if (hasUpcomingMaintenance) {
+        return 'in_maintenance';
+    }
+
+    return status;
+}
+
+export const getTools = async (req: Request, res: Response) => {
+    try {
+        const { search, startDate: startDateQuery, endDate: endDateQuery, locationId, manufacturerId, toolTypeId } = req.query;
+        
+        const whereClause: any = {};
+        if (locationId) whereClause.locationId = locationId;
+        if (manufacturerId) whereClause.manufacturerId = manufacturerId;
+        if (toolTypeId) whereClause.toolTypeId = toolTypeId;
+
+        let toolTypeWhereClause;
+        if(search) {
+            toolTypeWhereClause = { name: { [Op.like]: `%${search}%` } };
+        }
+
+        let tools = await Tool.findAll({
+            where: whereClause,
+            include: [
+                { model: ToolType, as: 'toolType', where: toolTypeWhereClause },
+                { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
+                { model: Booking, as: 'bookings' },
+                { model: Maintenance, as: 'maintenances' },
+                { model: Location, as: 'location', attributes: ['id', 'name'] },
+                { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] }
+            ],
+            order: [['createdAt', 'DESC']],
+        });
+
+        if (startDateQuery && endDateQuery) {
+            const requestedStartDate = new Date(startDateQuery as string);
+            const requestedEndDate = new Date(endDateQuery as string);
+
+            if (!isNaN(requestedStartDate.getTime()) && !isNaN(requestedEndDate.getTime())) {
+                tools = tools.filter(tool => {
+                    const toolWithAssocs = tool as ToolWithAssociations;
+                    const isUnavailable = toolWithAssocs.bookings?.some((b: Booking) =>
+                        (b.status === 'booked' || b.status === 'active') &&
+                        new Date(b.startDate) < requestedEndDate &&
+                        new Date(b.endDate) > requestedStartDate
+                    ) || toolWithAssocs.maintenances?.some((m: Maintenance) =>
+                        (m.status === 'scheduled' || m.status === 'in_progress') &&
+                        new Date(m.startDate) < requestedEndDate &&
+                        (m.endDate ? new Date(m.endDate) : new Date(m.startDate)) > requestedStartDate
+                    );
+                    return !isUnavailable;
+                });
+            }
+        }
+
+        const toolsWithStatus = tools.map(tool => {
+            const toolJson = tool.toJSON() as any;
+            toolJson.status = calculateToolStatus(tool as ToolWithAssociations);
+            return toolJson;
+        });
+
+        res.status(200).json(toolsWithStatus);
+    } catch (error) {
+        console.error("Error in getTools:", error);
+        res.status(500).json({ message: 'Something went wrong', error: (error as Error).message });
+    }
 };
 
 export const getTool = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const tool = await Tool.findByPk(id, {
-        include: [
-            { model: ToolType, as: 'toolType' },
-            { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
-            { model: Booking, as: 'bookings' },
-            { model: Location, as: 'location', attributes: ['id', 'name'] },
-            { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] }
-        ]
-    });
-    if (!tool) {
-      return res.status(404).json({ message: 'Tool not found' });
+    try {
+        const { id } = req.params;
+        const tool = await Tool.findByPk(id, {
+            include: [
+                { model: ToolType, as: 'toolType' },
+                { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
+                { model: Booking, as: 'bookings' },
+                { model: Maintenance, as: 'maintenances' },
+                { model: Location, as: 'location', attributes: ['id', 'name'] },
+                { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] },
+                { model: Attachment, as: 'attachments' }
+            ]
+        });
+        if (!tool) {
+            return res.status(404).json({ message: 'Tool not found' });
+        }
+
+        const toolJson = tool.toJSON() as any;
+        toolJson.status = calculateToolStatus(tool as ToolWithAssociations);
+        
+        res.status(200).json(toolJson);
+    } catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
     }
-    res.status(200).json(tool);
-  } catch (error) {
-    res.status(500).json({ message: 'Something went wrong' });
-  }
 };
 
 export const updateTool = async (req: AuthRequest, res: Response) => {
@@ -148,7 +236,7 @@ export const updateTool = async (req: AuthRequest, res: Response) => {
     const t = await sequelize.transaction();
 
     try {
-        const { toolTypeId, rfid, serialNumber, status, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
+        const { toolTypeId, rfid, serialNumber, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
         const tool = await Tool.findByPk(id, { transaction: t });
 
         if (!tool) {
@@ -170,7 +258,6 @@ export const updateTool = async (req: AuthRequest, res: Response) => {
             toolTypeId: parseInt(toolTypeId, 10),
             rfid,
             serialNumber,
-            status,
             condition,
             purchaseDate: (purchaseDate && !isNaN(new Date(purchaseDate).getTime())) ? purchaseDate : null,
             cost: (cost && !isNaN(parseFloat(cost))) ? parseFloat(cost) : null,
@@ -245,114 +332,120 @@ export const deleteTool = async (req: Request, res: Response) => {
 };
 
 export const checkoutTool = async (req: AuthRequest, res: Response) => {
-  try {
     const { id } = req.params;
     const userId = req.user.id;
-    const tool = await Tool.findByPk(id);
+    const t = await sequelize.transaction();
 
-    if (!tool) {
-      return res.status(404).json({ message: 'Tool not found' });
-    }
-
-    if (tool.status === 'in_use') {
-        return res.status(400).json({ message: 'Tool is already in use.' });
-    }
-    
-    if (tool.status === 'in_maintenance') {
-        return res.status(400).json({ message: 'Tool is in maintenance.' });
-    }
-
-    const now = new Date();
-
-    const existingBooking = await Booking.findOne({
-        where: {
-            toolId: tool.id,
-            userId,
-            status: 'booked',
-            startDate: { [Op.lte]: now },
-            endDate: { [Op.gte]: now }
-        }
-    });
-
-    if (tool.status === 'booked' && !existingBooking) {
-        return res.status(400).json({ message: 'Tool is booked by another user for this period.' });
-    }
-
-    if (existingBooking) {
-        existingBooking.status = 'active';
-        await existingBooking.save();
-    } else {
-        // Create a new booking if one doesn't exist
-        await Booking.create({
-            toolId: tool.id,
-            userId,
-            startDate: now,
-            // Set a default end date, e.g., 2 weeks from now
-            endDate: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
-            status: 'active'
+    try {
+        const tool = await Tool.findByPk(id, { 
+            include: [
+                { model: Booking, as: 'bookings' },
+                { model: Maintenance, as: 'maintenances' }
+            ], 
+            transaction: t 
         });
+        if (!tool) {
+            await t.rollback();
+            return res.status(404).json({ message: 'Tool not found' });
+        }
+
+        const toolStatus = calculateToolStatus(tool as ToolWithAssociations);
+        if (toolStatus !== 'available' && toolStatus !== 'booked') {
+            await t.rollback();
+            return res.status(400).json({ message: `Tool is not available for checkout. Current status: ${toolStatus}` });
+        }
+
+        const now = new Date();
+        let booking = await Booking.findOne({
+            where: {
+                toolId: id,
+                userId: userId,
+                status: 'booked',
+                startDate: { [Op.lte]: now },
+                endDate: { [Op.gte]: now }
+            },
+            transaction: t
+        });
+
+        if (booking) {
+            await booking.update({ status: 'active' }, { transaction: t });
+        } else {
+            // No pre-existing booking found, create a new one for immediate checkout
+            const toolWithAssocs = tool as ToolWithAssociations;
+            const isUnavailable = toolWithAssocs.bookings?.some((b: Booking) =>
+                (b.status === 'booked' || b.status === 'active') &&
+                new Date(b.startDate) < new Date(now.getTime() + 1) &&
+                new Date(b.endDate) > now
+            ) || toolWithAssocs.maintenances?.some((m: Maintenance) =>
+                (m.status === 'scheduled' || m.status === 'in_progress') &&
+                new Date(m.startDate) < new Date(now.getTime() + 1) &&
+                (m.endDate ? new Date(m.endDate) : new Date(m.startDate)) > now
+            );
+
+            if (isUnavailable) {
+                await t.rollback();
+                return res.status(409).json({ message: 'Tool is booked or in maintenance and cannot be checked out.' });
+            }
+
+            booking = await Booking.create({
+                toolId: tool.id,
+                userId: userId,
+                startDate: now,
+                endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), // Default 1 week
+                status: 'active',
+            }, { transaction: t });
+        }
+
+        await tool.update({ currentOwnerId: userId }, { transaction: t });
+
+        await t.commit();
+        res.status(200).json(booking);
+    } catch (error) {
+        await t.rollback();
+        console.error("Checkout error:", error);
+        res.status(500).json({ message: 'Something went wrong during checkout.' });
     }
-
-    await tool.update({ status: 'in_use', currentOwnerId: userId });
-
-    res.status(200).json(tool);
-  } catch (error) {
-    res.status(500).json({ message: 'Something went wrong' });
-  }
-}
+};
 
 export const checkinTool = async (req: AuthRequest, res: Response) => {
-  try {
     const { id } = req.params;
-    const userId = req.user.id;
-    const tool = await Tool.findByPk(id);
+    const t = await sequelize.transaction();
 
-    if (!tool) {
-      return res.status(404).json({ message: 'Tool not found' });
-    }
-
-    if (tool.status !== 'in_use') {
-      return res.status(400).json({ message: 'Tool is not checked out.' });
-    }
-    
-    if (tool.currentOwnerId !== userId) {
-        return res.status(403).json({ message: 'You are not the current owner of this tool.' });
-    }
-
-    const now = new Date();
-
-    const activeBooking = await Booking.findOne({
-        where: {
-            toolId: tool.id,
-            userId,
-            status: 'active'
+    try {
+        const tool = await Tool.findByPk(id, { transaction: t });
+        if (!tool) {
+            await t.rollback();
+            return res.status(404).json({ message: 'Tool not found' });
         }
-    });
-    
-    if (activeBooking) {
-        activeBooking.status = 'completed';
-        activeBooking.endDate = now;
-        await activeBooking.save();
+
+        const now = new Date();
+        const booking = await Booking.findOne({
+            where: {
+                toolId: id,
+                status: 'active',
+                // Optional: check if the current user is the one who checked it out
+                // userId: req.user.id
+            },
+            order: [['startDate', 'DESC']],
+            transaction: t
+        });
+
+        if (!booking) {
+            await t.rollback();
+            return res.status(400).json({ message: 'No active booking found for this tool to check in.' });
+        }
+
+        await booking.update({ status: 'completed', endDate: now }, { transaction: t });
+        await tool.update({ currentOwnerId: undefined }, { transaction: t });
+
+        await t.commit();
+        res.status(200).json({ message: 'Tool checked in successfully.' });
+    } catch (error) {
+        await t.rollback();
+        console.error("Checkin error:", error);
+        res.status(500).json({ message: 'Something went wrong during check-in.' });
     }
-
-    tool.status = 'available';
-    tool.currentOwnerId = undefined;
-    tool.usageCount = (tool.usageCount || 0) + 1;
-    await tool.save();
-
-    const toolWithType = await Tool.findByPk(tool.id, { include: [{ model: ToolType, as: 'toolType' }] });
-
-    // Notify admin (user ID 1)
-    await Notification.create({
-        userId: 1, // Assuming admin user has ID 1
-        message: `Tool "${(toolWithType as any).toolType.name}" has been checked in by user #${userId}.`
-    });
-
-    res.status(200).json(toolWithType);
-  } catch (error) {
-    res.status(500).json({ message: 'Something went wrong' });
-  }
-}
+};
 
 export const getMyCheckedOutTools = async (req: AuthRequest, res: Response) => {
     try {

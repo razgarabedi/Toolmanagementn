@@ -14,7 +14,7 @@ interface ToolInstance {
     description: string;
     rfid?: string;
     serialNumber?: string;
-    status: string;
+    status: 'available' | 'in_use' | 'in_maintenance' | 'booked';
     condition: string;
     instanceImage?: string;
     location?: { name: string };
@@ -33,8 +33,7 @@ const ToolInstanceCard = ({ instance, onEdit, onDelete, onPreview }: { instance:
     const getStatusClasses = (status: string) => {
         switch (status) {
             case 'available': return 'bg-green-200 text-green-800';
-            case 'in_use':
-            case 'checked_out': return 'bg-yellow-200 text-yellow-800';
+            case 'in_use': return 'bg-yellow-200 text-yellow-800';
             case 'in_maintenance': return 'bg-red-200 text-red-800';
             case 'booked': return 'bg-purple-200 text-purple-800';
             default: return 'bg-gray-200 text-gray-800';

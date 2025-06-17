@@ -18,7 +18,7 @@ interface ToolInstance {
     id: number;
     name: string;
     description: string;
-    status: 'available' | 'in_use' | 'checked_out' | 'in_maintenance' | 'booked';
+    status: 'available' | 'in_use' | 'in_maintenance' | 'booked';
     rfid?: string;
     serialNumber?: string;
     condition: string;
@@ -68,8 +68,10 @@ const ToolsPage = () => {
 
     const getStatusCounts = (instances: ToolInstance[] = []) => {
         const available = instances.filter(i => i.status === 'available').length;
-        const checkedOut = instances.filter(i => i.status === 'in_use' || i.status === 'checked_out').length;
-        return { available, checkedOut, total: instances.length };
+        const checkedOut = instances.filter(i => i.status === 'in_use').length;
+        const maintenance = instances.filter(i => i.status === 'in_maintenance').length;
+        const booked = instances.filter(i => i.status === 'booked').length;
+        return { available, checkedOut, maintenance, booked, total: instances.length };
     };
 
     const groupedTools = (tools || []).reduce((acc, tool) => {

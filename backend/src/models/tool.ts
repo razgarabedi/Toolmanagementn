@@ -9,7 +9,6 @@ interface ToolAttributes {
   toolTypeId: number;
   rfid?: string;
   serialNumber?: string;
-  status: 'available' | 'in_use' | 'in_maintenance' | 'booked';
   condition: 'new' | 'good' | 'fair' | 'poor';
   currentOwnerId?: number;
   purchaseDate?: Date | null;
@@ -30,7 +29,6 @@ class Tool extends Model<ToolAttributes, ToolCreationAttributes> implements Tool
   public toolTypeId!: number;
   public rfid?: string;
   public serialNumber?: string;
-  public status!: 'available' | 'in_use' | 'in_maintenance' | 'booked';
   public condition!: 'new' | 'good' | 'fair' | 'poor';
   public currentOwnerId?: number;
   public purchaseDate!: Date | null;
@@ -48,6 +46,7 @@ class Tool extends Model<ToolAttributes, ToolCreationAttributes> implements Tool
   public static associate(models: any) {
     Tool.belongsTo(models.User, { as: 'currentOwner', foreignKey: 'currentOwnerId' });
     Tool.hasMany(models.Booking, { as: 'bookings', foreignKey: 'toolId' });
+    Tool.hasMany(models.Maintenance, { as: 'maintenances', foreignKey: 'toolId' });
     Tool.belongsTo(models.Location, { as: 'location', foreignKey: 'locationId' });
     Tool.belongsTo(models.ToolType, { as: 'toolType', foreignKey: 'toolTypeId' });
     Tool.hasMany(models.Attachment, { as: 'attachments', foreignKey: 'toolId' });
@@ -83,10 +82,6 @@ Tool.init(
         type: DataTypes.STRING,
         allowNull: true,
         unique: true
-    },
-    status: {
-      type: DataTypes.ENUM('available', 'in_use', 'in_maintenance', 'booked'),
-      allowNull: false,
     },
     condition: {
       type: DataTypes.ENUM('new', 'good', 'fair', 'poor'),
