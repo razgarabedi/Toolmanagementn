@@ -34,6 +34,13 @@
         "createSuccess": "Tool instance created successfully.",
         "updateSuccess": "Tool instance updated successfully.",
         "error": "Error creating tool instance.",
+        "errorNetwork": "A network error occurred. Please check your connection.",
+        "errorDuplicateRfid": "This RFID is already in use.",
+        "errorDuplicateSerialNumber": "This Serial Number is already in use.",
+        "errorUnique": "{{field}} must be unique.",
+        "errorRequired": "This field is required.",
+        "errorInvalidReference": "Invalid {{field}}. The selected item does not exist.",
+        "validationErrorTitle": "Please correct the errors below.",
         "title": "Tool Instance"
     },
     "toolInstanceCard": {

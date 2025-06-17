@@ -13,11 +13,11 @@ interface ToolAttributes {
   condition: 'new' | 'good' | 'fair' | 'poor';
   currentOwnerId?: number;
   purchaseDate?: Date | null;
-  cost?: number;
+  cost?: number | null;
   warrantyEndDate?: Date;
   usageCount: number;
   locationId?: number | null;
-  manufacturerId?: number;
+  manufacturerId?: number | null;
   instanceImage?: string;
   description?: string;
 }
@@ -34,11 +34,11 @@ class Tool extends Model<ToolAttributes, ToolCreationAttributes> implements Tool
   public condition!: 'new' | 'good' | 'fair' | 'poor';
   public currentOwnerId?: number;
   public purchaseDate!: Date | null;
-  public cost?: number;
+  public cost?: number | null;
   public warrantyEndDate?: Date;
   public usageCount!: number;
   public locationId!: number | null;
-  public manufacturerId?: number;
+  public manufacturerId?: number | null;
   public instanceImage?: string;
   public description?: string;
 

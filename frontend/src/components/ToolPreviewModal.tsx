@@ -72,7 +72,7 @@ const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
                     <div className="lg:col-span-1">
                         <div className="relative w-full h-80 rounded-lg overflow-hidden">
                             <SafeImage 
-                                src={getImageUrl(tool.instanceImage) || getImageUrl(toolType.image)}
+                                src={getImageUrl(tool.instanceImage) || getImageUrl(toolType.image) || ''}
                                 fallbackSrc="/vercel.svg"
                                 alt={tool.name || toolType.name}
                                 layout="fill" 

@@ -34,6 +34,13 @@
         "createSuccess": "Werkzeuginstanz erfolgreich erstellt.",
         "updateSuccess": "Werkzeuginstanz erfolgreich aktualisiert.",
         "error": "Fehler beim Erstellen der Werkzeuginstanz.",
+        "errorNetwork": "Ein Netzwerkfehler ist aufgetreten. Bitte überprüfen Sie Ihre Verbindung.",
+        "errorDuplicateRfid": "Diese RFID wird bereits verwendet.",
+        "errorDuplicateSerialNumber": "Diese Seriennummer wird bereits verwendet.",
+        "errorUnique": "{{field}} muss eindeutig sein.",
+        "errorRequired": "Dieses Feld ist ein Pflichtfeld.",
+        "errorInvalidReference": "Ungültiges {{field}}. Das ausgewählte Element existiert nicht.",
+        "validationErrorTitle": "Bitte korrigieren Sie die Fehler unten.",
         "title": "Werkzeug-Instanz"
     },
     "toolInstanceCard": {

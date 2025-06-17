@@ -18,7 +18,7 @@ interface ToolInstance {
     condition: string;
     instanceImage?: string;
     location?: { name: string };
-    toolType: {
+    toolType?: {
         id: number;
         name: string;
         image?: string;

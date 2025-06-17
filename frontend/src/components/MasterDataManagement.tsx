@@ -34,9 +34,6 @@ const MasterDataManagement: React.FC<MasterDataManagementProps> = ({ resource, t
   const { data, isLoading, isError, error } = useQuery<{ data: DataItem[] }>({
     queryKey: [resourcePath],
     queryFn: () => api.get(`/${resourcePath}`).then(res => res.data),
-    onError: () => {
-      toast.error(t('settings.masterData.error'));
-    },
   });
 
   const deleteMutation = useMutation({

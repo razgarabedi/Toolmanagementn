@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Tool, Booking, User, ToolType, Location, Attachment } from '../models';
+import { Tool, Booking, User, ToolType, Location, Attachment, Manufacturer } from '../models';
 import { Op, ValidationError, UniqueConstraintError, ForeignKeyConstraintError } from 'sequelize';
 import { AuthRequest } from '../middleware/auth';
 import sequelize from '../db';
@@ -32,17 +32,24 @@ export const createTool = async (req: AuthRequest, res: Response) => {
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const instanceImage = files?.instanceImage ? files.instanceImage[0].path : undefined;
 
+        if (!toolTypeId) {
+            return res.status(400).json({
+                message: "Validation Error",
+                errors: [{ field: 'toolTypeId', message: 'A tool type is required.' }]
+            });
+        }
+
         const tool = await Tool.create({
-            toolTypeId,
+            toolTypeId: parseInt(toolTypeId, 10),
             rfid,
             serialNumber,
             status,
             condition,
-            purchaseDate: purchaseDate || null,
-            cost,
-            warrantyEndDate: warrantyEndDate || null,
-            locationId,
-            manufacturerId,
+            purchaseDate: (purchaseDate && !isNaN(new Date(purchaseDate).getTime())) ? purchaseDate : null,
+            cost: (cost && !isNaN(parseFloat(cost))) ? parseFloat(cost) : null,
+            warrantyEndDate: (warrantyEndDate && !isNaN(new Date(warrantyEndDate).getTime())) ? warrantyEndDate : null,
+            locationId: (locationId && !isNaN(parseInt(locationId, 10))) ? parseInt(locationId, 10) : null,
+            manufacturerId: (manufacturerId && !isNaN(parseInt(manufacturerId, 10))) ? parseInt(manufacturerId, 10) : null,
             description,
             name,
             instanceImage,
@@ -58,7 +65,7 @@ export const createTool = async (req: AuthRequest, res: Response) => {
         }
 
         await t.commit();
-        const result = await Tool.findByPk(tool.id, { include: ['attachments']});
+        const result = await Tool.findByPk(tool.id, { include: ['attachments', 'manufacturer']});
         res.status(201).json(result);
     } catch (error: any) {
         await t.rollback();
@@ -72,11 +79,13 @@ export const createTool = async (req: AuthRequest, res: Response) => {
             });
         }
         if (error instanceof ForeignKeyConstraintError) {
+            const field = (error as any).fields[0] || 'unknown_field';
             return res.status(400).json({
-                message: "Invalid reference to another entity",
-                error: {
-                    field: (error as any).fields[0],
-                }
+                message: "Validation Error",
+                errors: [{
+                    field: field,
+                    message: `Referenced entity for ${field} does not exist.`
+                }]
             });
         }
         console.error("Error creating tool:", error);
@@ -102,7 +111,8 @@ export const getTools = async (req: Request, res: Response) => {
         },
         { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
         { model: Booking, as: 'bookings' },
-        { model: Location, as: 'location', attributes: ['id', 'name'] }
+        { model: Location, as: 'location', attributes: ['id', 'name'] },
+        { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] }
       ],
       order: [['createdAt', 'DESC']],
     });
@@ -120,7 +130,8 @@ export const getTool = async (req: Request, res: Response) => {
             { model: ToolType, as: 'toolType' },
             { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
             { model: Booking, as: 'bookings' },
-            { model: Location, as: 'location', attributes: ['id', 'name'] }
+            { model: Location, as: 'location', attributes: ['id', 'name'] },
+            { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] }
         ]
     });
     if (!tool) {
@@ -148,17 +159,24 @@ export const updateTool = async (req: AuthRequest, res: Response) => {
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const instanceImage = files?.instanceImage ? files.instanceImage[0].path : tool.instanceImage;
 
+        if (!toolTypeId) {
+            return res.status(400).json({
+                message: "Validation Error",
+                errors: [{ field: 'toolTypeId', message: 'A tool type is required.' }]
+            });
+        }
+
         await tool.update({
-            toolTypeId,
+            toolTypeId: parseInt(toolTypeId, 10),
             rfid,
             serialNumber,
             status,
             condition,
-            purchaseDate: purchaseDate || null,
-            cost,
-            warrantyEndDate: warrantyEndDate || null,
-            locationId,
-            manufacturerId,
+            purchaseDate: (purchaseDate && !isNaN(new Date(purchaseDate).getTime())) ? purchaseDate : null,
+            cost: (cost && !isNaN(parseFloat(cost))) ? parseFloat(cost) : null,
+            warrantyEndDate: (warrantyEndDate && !isNaN(new Date(warrantyEndDate).getTime())) ? warrantyEndDate : null,
+            locationId: (locationId && !isNaN(parseInt(locationId, 10))) ? parseInt(locationId, 10) : null,
+            manufacturerId: (manufacturerId && !isNaN(parseInt(manufacturerId, 10))) ? parseInt(manufacturerId, 10) : null,
             description,
             name,
             instanceImage
@@ -175,11 +193,12 @@ export const updateTool = async (req: AuthRequest, res: Response) => {
         }
 
         await t.commit();
-        const updatedTool = await Tool.findByPk(id, { include: ['attachments']});
+        const updatedTool = await Tool.findByPk(id, { include: ['attachments', 'manufacturer']});
         res.status(200).json(updatedTool);
 
     } catch (error: any) {
         await t.rollback();
+        console.error("Error updating tool:", error);
         if (error instanceof ValidationError || error instanceof UniqueConstraintError) {
             return res.status(400).json({
                 message: "Validation Error",
@@ -190,18 +209,24 @@ export const updateTool = async (req: AuthRequest, res: Response) => {
             });
         }
         if (error instanceof ForeignKeyConstraintError) {
+            const field = (error as any).fields[0] || 'unknown_field';
             return res.status(400).json({
-                message: "Invalid reference to another entity",
-                error: {
-                    field: (error as any).fields[0],
-                }
+                message: "Validation Error",
+                errors: [{
+                    field: field,
+                    message: `Referenced entity for ${field} does not exist.`
+                }]
             });
         }
-        console.error("Error updating tool:", error);
+        console.error("Full error object:", JSON.stringify(error, null, 2));
         if (error.message.includes('File upload only supports')) {
             return res.status(400).json({ message: error.message });
         }
-        res.status(500).json({ message: 'Error updating tool' });
+        res.status(500).json({ 
+            message: 'Error updating tool', 
+            error: error.message, 
+            stack: error.stack 
+        });
     }
 };
 
