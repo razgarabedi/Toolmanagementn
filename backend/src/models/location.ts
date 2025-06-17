@@ -16,7 +16,10 @@ export class Location extends Model<LocationAttributes, LocationCreationAttribut
   public readonly updatedAt!: Date;
 
   public static associate(models: any) {
-    Location.hasMany(models.Tool, { as: 'tools', foreignKey: 'locationId' });
+    Location.hasMany(models.Tool, {
+        as: 'tools',
+        foreignKey: 'locationId',
+    });
   }
 }
 

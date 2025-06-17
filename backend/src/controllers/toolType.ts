@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { ToolType } from '../models';
+import { ToolType, Tool, Category } from '../models';
+import { deleteResource } from '../lib/utils';
 
 export const createToolType = async (req: Request, res: Response) => {
     try {
@@ -24,9 +25,15 @@ export const createToolType = async (req: Request, res: Response) => {
 
 export const getToolTypes = async (req: Request, res: Response) => {
     try {
-        const toolTypes = await ToolType.findAll({ include: ['category'] });
-        res.status(200).json(toolTypes);
-    } catch (error: any) {
-        res.status(500).json({ message: 'Error fetching tool types', error });
+        const toolTypes = await ToolType.findAll({
+            include: [{ model: Category, as: 'category' }]
+        });
+        res.status(200).json({ data: toolTypes });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching tool types' });
     }
+};
+
+export const deleteToolType = async (req: Request, res: Response) => {
+    await deleteResource(req, res, ToolType, 'Tool Type', { model: Tool, as: 'instances' });
 }; 

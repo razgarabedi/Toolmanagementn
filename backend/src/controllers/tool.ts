@@ -305,4 +305,17 @@ export const getMyCheckedOutTools = async (req: AuthRequest, res: Response) => {
         console.error("Error in getMyCheckedOutTools:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-} 
+}
+
+export const getMyTools = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const tools = await Tool.findAll({
+            where: { currentOwnerId: userId },
+            include: ['category', 'location', 'toolType', 'bookings', 'maintenances']
+        });
+        res.status(200).json(tools);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user tools', error });
+    }
+}; 

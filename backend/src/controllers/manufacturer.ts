@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { Manufacturer } from '../models';
+import { Manufacturer, ToolType } from '../models';
+import { deleteResource } from '../lib/utils';
 
 export const createManufacturer = async (req: Request, res: Response) => {
     const { name } = req.body;
@@ -18,8 +19,12 @@ export const createManufacturer = async (req: Request, res: Response) => {
 export const getManufacturers = async (req: Request, res: Response) => {
     try {
         const manufacturers = await Manufacturer.findAll();
-        res.status(200).json(manufacturers);
+        res.status(200).json({ data: manufacturers });
     } catch (error: any) {
         res.status(500).json({ message: 'Error fetching manufacturers', error });
     }
+};
+
+export const deleteManufacturer = async (req: Request, res: Response) => {
+    await deleteResource(req, res, Manufacturer, 'Manufacturer', { model: ToolType, as: 'toolTypes' });
 }; 

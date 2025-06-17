@@ -2,16 +2,13 @@ import { Request, Response } from 'express';
 import { Notification } from '../models';
 import { AuthRequest } from '../middleware/auth';
 
-export const getMyNotifications = async (req: AuthRequest, res: Response) => {
+export const getMyNotifications = async (req: Request, res: Response) => {
     try {
-        const userId = req.user.id;
-        const notifications = await Notification.findAll({
-            where: { userId },
-            order: [['createdAt', 'DESC']],
-        });
+        const userId = (req as any).user.id;
+        const notifications = await Notification.findAll({ where: { userId, isRead: false } });
         res.status(200).json(notifications);
     } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+        res.status(500).json({ message: 'Error fetching user notifications', error });
     }
 };
 

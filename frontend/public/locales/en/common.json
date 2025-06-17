@@ -37,5 +37,51 @@
         "location": "Location: {{location}}",
         "checkout": "Checkout",
         "book": "Book"
-    }
+    },
+    "users": {
+        "title": "Users"
+    },
+    "settings": {
+        "title": "Settings",
+        "tabs": {
+            "masterData": "Master Data",
+            "notifications": "Notifications",
+            "general": "General"
+        },
+        "masterData": {
+            "add": "Add New",
+            "error": "Failed to load data.",
+            "name": "Name",
+            "actions": "Actions",
+            "categories": "Categories",
+            "manufacturers": "Manufacturers",
+            "toolTypes": "Tool Types",
+            "locations": "Locations",
+            "addTitle": "Add {{resource}}",
+            "editTitle": "Edit {{resource}}",
+            "formError": "Failed to save {{resource}}. Please try again.",
+            "deleteConfirmTitle": "Delete {{resource}}?",
+            "deleteConfirm": "Are you sure you want to delete this {{resource}}? This action cannot be undone.",
+            "addSuccess": "{{resource}} added successfully.",
+            "editSuccess": "{{resource}} updated successfully.",
+            "deleteSuccess": "{{resource}} deleted successfully.",
+            "deleteError": "Failed to delete {{resource}}."
+        },
+        "general": {
+            "theme": {
+                "title": "Appearance",
+                "description": "Choose how the application looks. This will be saved for your next visit."
+            },
+            "registration": {
+                "title": "User Registration",
+                "description": "Manage settings for new user registrations."
+            }
+        },
+        "placeholder": "{{tab}} content will go here."
+    },
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "loading": "Loading...",
+    "delete": "Delete"
 } 

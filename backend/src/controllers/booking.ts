@@ -147,4 +147,17 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-} 
+}
+
+export const getMyBookings = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const bookings = await Booking.findAll({ 
+            where: { userId },
+            include: [{ model: Tool, include: ['toolType'] }] 
+        });
+        res.status(200).json(bookings);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user bookings', error });
+    }
+}; 

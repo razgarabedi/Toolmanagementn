@@ -6,7 +6,7 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Spinner from './Spinner';
-import CategoryFormModal from './CategoryFormModal';
+import MasterDataFormModal from './MasterDataFormModal';
 import Image from 'next/image';
 
 interface ToolType {
@@ -22,9 +22,10 @@ interface Category {
 interface ToolTypeFormModalProps {
     onClose: () => void;
     onSuccess: (newToolType: ToolType) => void;
+    toolType?: ToolType | null;
 }
 
-const ToolTypeFormModal = ({ onClose, onSuccess }: ToolTypeFormModalProps) => {
+const ToolTypeFormModal = ({ onClose, onSuccess, toolType }: ToolTypeFormModalProps) => {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [formData, setFormData] = useState({
@@ -35,10 +36,11 @@ const ToolTypeFormModal = ({ onClose, onSuccess }: ToolTypeFormModalProps) => {
     });
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
-    const { data: categories } = useQuery<Category[]>({
+    const { data: categoriesData } = useQuery<{ data: Category[] }>({
         queryKey: ['categories'],
         queryFn: () => api.get('/categories').then(res => res.data),
     });
+    const categories = categoriesData?.data;
 
     const mutation = useMutation({
         mutationFn: (newToolType: FormData) => {
@@ -47,7 +49,7 @@ const ToolTypeFormModal = ({ onClose, onSuccess }: ToolTypeFormModalProps) => {
             });
         },
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['toolTypes'] });
+            queryClient.invalidateQueries({ queryKey: ['tool-types'] });
             toast.success(t('toolTypeForm.createSuccess'));
             onSuccess(data.data);
             onClose();
@@ -125,12 +127,17 @@ const ToolTypeFormModal = ({ onClose, onSuccess }: ToolTypeFormModalProps) => {
             </div>
 
             {isCategoryModalOpen && (
-                <CategoryFormModal 
-                    onClose={() => setIsCategoryModalOpen(false)} 
+                <MasterDataFormModal
+                    resource="category"
+                    title={t('settings.masterData.categories')}
+                    item={null}
+                    onClose={() => setIsCategoryModalOpen(false)}
                     onSuccess={(newCategory) => {
-                        queryClient.invalidateQueries({ queryKey: ['categories'] });
+                        queryClient.setQueryData(['categories'], (old: { data: Category[] } | undefined) => {
+                            if (!old || !old.data) return { data: [newCategory] };
+                            return { data: [...old.data, newCategory] };
+                        });
                         setFormData(prev => ({ ...prev, categoryId: newCategory.id.toString() }));
-                        setIsCategoryModalOpen(false);
                     }}
                 />
             )}

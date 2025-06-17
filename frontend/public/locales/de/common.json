@@ -37,5 +37,51 @@
         "location": "Standort: {{location}}",
         "checkout": "Ausbuchen",
         "book": "Buchen"
-    }
-} 
+    },
+    "users": {
+        "title": "Benutzer"
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "tabs": {
+            "masterData": "Stammdaten",
+            "notifications": "Benachrichtigungen",
+            "general": "Allgemein"
+        },
+        "masterData": {
+            "add": "Neu hinzufügen",
+            "error": "Daten konnten nicht geladen werden.",
+            "name": "Name",
+            "actions": "Aktionen",
+            "categories": "Kategorien",
+            "manufacturers": "Hersteller",
+            "toolTypes": "Werkzeugtypen",
+            "locations": "Standorte",
+            "addTitle": "{{resource}} hinzufügen",
+            "editTitle": "{{resource}} bearbeiten",
+            "formError": "Fehler beim Speichern von {{resource}}. Bitte versuchen Sie es erneut.",
+            "deleteConfirmTitle": "{{resource}} löschen?",
+            "deleteConfirm": "Sind Sie sicher, dass Sie diese {{resource}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+            "addSuccess": "{{resource}} erfolgreich hinzugefügt.",
+            "editSuccess": "{{resource}} erfolgreich aktualisiert.",
+            "deleteSuccess": "{{resource}} erfolgreich gelöscht.",
+            "deleteError": "Fehler beim Löschen von {{resource}}."
+        },
+        "general": {
+            "theme": {
+                "title": "Erscheinungsbild",
+                "description": "Wählen Sie das Aussehen der Anwendung. Ihre Auswahl wird für den nächsten Besuch gespeichert."
+            },
+            "registration": {
+                "title": "Benutzerregistrierung",
+                "description": "Verwalten Sie die Einstellungen für neue Benutzerregistrierungen."
+            }
+        },
+        "placeholder": "Inhalt für {{tab}} wird hier angezeigt."
+    },
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "loading": "Wird geladen...",
+    "delete": "Löschen"
+}

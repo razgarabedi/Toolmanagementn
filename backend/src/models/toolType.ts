@@ -83,4 +83,11 @@ ToolType.init(
     tableName: 'tool_types',
     modelName: 'ToolType',
   }
-); 
+);
+
+ToolType.addScope('withInstances', {
+  include: [{
+    model: Tool,
+    as: 'instances'
+  }]
+}); 

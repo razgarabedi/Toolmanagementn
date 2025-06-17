@@ -36,10 +36,11 @@ const ToolsPage = () => {
     const [searchTerms, setSearchTerms] = useState<Record<number, string>>({});
     const [showForm, setShowForm] = useState(false);
 
-    const { data: toolTypes, isLoading, isError } = useQuery<ToolType[]>({
-        queryKey: ['toolTypes'],
+    const { data: toolTypesData, isLoading, isError } = useQuery<{ data: ToolType[] }>({
+        queryKey: ['tool-types'],
         queryFn: () => api.get('/tool-types').then(res => res.data),
     });
+    const toolTypes = toolTypesData?.data;
 
     const toggleExpand = (id: number) => {
         setExpanded(prev => ({ ...prev, [id]: !prev[id] }));

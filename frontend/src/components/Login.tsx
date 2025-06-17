@@ -19,13 +19,13 @@ const Login = () => {
     email: '',
     password: '',
   });
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, loading } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!loading && isAuthenticated) {
       router.push('/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, loading]);
 
   const mutation = useMutation({
     mutationFn: (credentials: Credentials) => {
@@ -34,8 +34,13 @@ const Login = () => {
     onSuccess: (data) => {
       login(data.data.token);
       router.push('/dashboard');
+      window.location.reload();
     },
   });
+
+  if (loading || isAuthenticated) {
+    return null;
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

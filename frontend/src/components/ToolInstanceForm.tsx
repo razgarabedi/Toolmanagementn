@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Spinner from './Spinner';
 import ToolTypeFormModal from './ToolTypeFormModal';
-import ManufacturerFormModal from './ManufacturerFormModal';
+import MasterDataFormModal from './MasterDataFormModal';
 import Image from 'next/image';
 import axios from 'axios';
 
@@ -50,6 +50,7 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
     const queryClient = useQueryClient();
     const [isToolTypeModalOpen, setIsToolTypeModalOpen] = useState(false);
     const [isManufacturerModalOpen, setIsManufacturerModalOpen] = useState(false);
+    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
     const [selectedToolType, setSelectedToolType] = useState<ToolType | null>(null);
 
     const [formData, setFormData] = useState<ToolInstanceFormData>({
@@ -69,20 +70,23 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
         description: '',
     });
 
-    const { data: toolTypes } = useQuery<ToolType[]>({
-        queryKey: ['toolTypes'],
+    const { data: toolTypesData } = useQuery<{ data: ToolType[] }>({
+        queryKey: ['tool-types'],
         queryFn: () => api.get('/tool-types').then(res => res.data),
     });
+    const toolTypes = toolTypesData?.data;
 
-    const { data: locations } = useQuery<Location[]>({
+    const { data: locationsData } = useQuery<{ data: Location[] }>({
         queryKey: ['locations'],
         queryFn: () => api.get('/locations').then(res => res.data),
     });
+    const locations = locationsData?.data;
 
-    const { data: manufacturers } = useQuery<Manufacturer[]>({
+    const { data: manufacturersData } = useQuery<{ data: Manufacturer[] }>({
         queryKey: ['manufacturers'],
         queryFn: () => api.get('/manufacturers').then(res => res.data),
     });
+    const manufacturers = manufacturersData?.data;
 
     useEffect(() => {
         if (formData.toolTypeId) {
@@ -283,10 +287,13 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
                             {/* Standort */}
                             <div className="col-span-2">
                                 <label htmlFor="locationId" className="block text-sm font-medium text-gray-700">{t('toolInstanceForm.location')}</label>
-                                <select id="locationId" name="locationId" value={formData.locationId} onChange={handleChange} className="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
-                                    <option value="">{t('toolInstanceForm.selectLocation')}</option>
-                                    {locations?.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
-                                </select>
+                                <div className="flex items-center space-x-2">
+                                    <select id="locationId" name="locationId" value={formData.locationId} onChange={handleChange} className="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                        <option value="">{t('toolInstanceForm.selectLocation')}</option>
+                                        {locations?.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
+                                    </select>
+                                    <button type="button" onClick={() => setIsLocationModalOpen(true)} className="mt-1 px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">+</button>
+                                </div>
                             </div>
                             
                             {/* Garantieablaufdatum */}
@@ -319,7 +326,7 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
                 <ToolTypeFormModal
                     onClose={() => setIsToolTypeModalOpen(false)}
                     onSuccess={(newToolType) => {
-                        queryClient.setQueryData(['toolTypes'], (old: ToolType[] | undefined) => [...(old || []), newToolType]);
+                        queryClient.setQueryData(['tool-types'], (old: ToolType[] | undefined) => [...(old || []), newToolType]);
                         setFormData(prev => ({ ...prev, toolTypeId: newToolType.id.toString() }));
                         setIsToolTypeModalOpen(false);
                     }}
@@ -327,12 +334,27 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
             )}
 
             {isManufacturerModalOpen && (
-                <ManufacturerFormModal
+                <MasterDataFormModal
+                    resource="manufacturer"
+                    title={t('settings.masterData.manufacturers')}
+                    item={null}
                     onClose={() => setIsManufacturerModalOpen(false)}
                     onSuccess={(newManufacturer) => {
                         queryClient.setQueryData(['manufacturers'], (old: Manufacturer[] | undefined) => [...(old || []), newManufacturer]);
                         setFormData(prev => ({...prev, manufacturerId: newManufacturer.id.toString() }));
-                        setIsManufacturerModalOpen(false);
+                    }}
+                />
+            )}
+
+            {isLocationModalOpen && (
+                <MasterDataFormModal
+                    resource="location"
+                    title={t('settings.masterData.locations')}
+                    item={null}
+                    onClose={() => setIsLocationModalOpen(false)}
+                    onSuccess={(newLocation) => {
+                        queryClient.setQueryData(['locations'], (old: Location[] | undefined) => [...(old || []), newLocation]);
+                        setFormData(prev => ({...prev, locationId: newLocation.id.toString() }));
                     }}
                 />
             )}
