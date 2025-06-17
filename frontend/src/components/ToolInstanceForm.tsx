@@ -45,8 +45,8 @@ interface Manufacturer {
     name: string;
 }
 
-const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
-    const { t } = useTranslation();
+const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance | null, onFormSubmit: () => void }) => {
+    const { t } = useTranslation('common');
     const queryClient = useQueryClient();
     const [isToolTypeModalOpen, setIsToolTypeModalOpen] = useState(false);
     const [isManufacturerModalOpen, setIsManufacturerModalOpen] = useState(false);
@@ -89,6 +89,44 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
     const manufacturers = manufacturersData?.data;
 
     useEffect(() => {
+        if (instance) {
+            setFormData({
+                toolTypeId: instance.toolTypeId || '',
+                name: instance.name || '',
+                rfid: instance.rfid || '',
+                serialNumber: instance.serialNumber || '',
+                status: instance.status || 'available',
+                condition: instance.condition || 'new',
+                purchaseDate: instance.purchaseDate || '',
+                cost: instance.cost || '',
+                warrantyEndDate: instance.warrantyEndDate || '',
+                locationId: instance.locationId || '',
+                manufacturerId: instance.manufacturerId || '',
+                instanceImage: null,
+                attachments: [],
+                description: instance.description || '',
+            });
+        } else {
+            setFormData({
+                toolTypeId: '',
+                name: '',
+                rfid: '',
+                serialNumber: '',
+                status: 'available',
+                condition: 'new',
+                purchaseDate: '',
+                cost: '',
+                warrantyEndDate: '',
+                locationId: '',
+                manufacturerId: '',
+                instanceImage: null,
+                attachments: [],
+                description: '',
+            });
+        }
+    }, [instance]);
+
+    useEffect(() => {
         if (formData.toolTypeId) {
             const toolType = toolTypes?.find(tt => tt.id === parseInt(formData.toolTypeId));
             setSelectedToolType(toolType || null);
@@ -110,11 +148,16 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
     }, [formData.toolTypeId, toolTypes]);
 
     const mutation = useMutation({
-        mutationFn: (formData: FormData) => api.post('/tool-instances', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
+        mutationFn: (formData: FormData) => {
+            if (instance) {
+                return api.put(`/tool-instances/${instance.id}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             }
-        })
+            return api.post('/tool-instances', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+        }
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -149,8 +192,9 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
         });
         mutation.mutate(postData, {
             onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ['toolInstances'] });
-                toast.success(t('toolInstanceForm.success'));
+                queryClient.invalidateQueries({ queryKey: ['tool-instances'] });
+                queryClient.invalidateQueries({ queryKey: ['tool-types'] });
+                toast.success(t(instance ? 'toolInstanceForm.updateSuccess' : 'toolInstanceForm.success'));
                 if (closeOnSubmit) {
                     onFormSubmit();
                 }
@@ -188,7 +232,7 @@ const ToolInstanceForm = ({ onFormSubmit }: { onFormSubmit: () => void }) => {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">{t('toolInstanceForm.addTitle')}</h2>
+                        <h2 className="text-2xl font-bold">{instance ? t('toolInstanceForm.editTitle') : t('toolInstanceForm.addTitle')}</h2>
                         <button onClick={onFormSubmit} className="text-gray-500 hover:text-gray-800">&times;</button>
                     </div>
 

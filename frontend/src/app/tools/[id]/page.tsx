@@ -10,7 +10,7 @@ import Spinner from '@/components/Spinner';
 import { Circle, Wrench, CheckCircle, Edit, History, Bookmark } from 'lucide-react';
 
 const ToolViewPage = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation('common');
     const params = useParams();
     const { id } = params;
     const [activeTab, setActiveTab] = useState('details');
@@ -21,7 +21,7 @@ const ToolViewPage = () => {
         enabled: !!id,
     });
 
-    if (isLoading) return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
+    if (isLoading || !i18n.isInitialized) return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
     if (isError) return <div className="text-center mt-10">{t('tool.loadError')}</div>;
     if (!tool) return null;
 
@@ -30,7 +30,7 @@ const ToolViewPage = () => {
     const detailItems = [
         { label: t('tool.description'), value: toolType.description },
         { label: t('tool.location'), value: tool.location?.name },
-        { label: t('tool.manufacturer'), value: toolType.manufacturer },
+        { label: t('tool.manufacturer'), value: toolType.manufacturer?.name },
         { label: t('tool.purchaseDate'), value: tool.purchaseDate ? new Date(tool.purchaseDate).toLocaleDateString() : 'N/A' },
         { label: t('tool.cost'), value: tool.cost ? `${tool.cost.toFixed(2)} €` : 'N/A' },
         { label: t('tool.warrantyEndDate'), value: tool.warrantyEndDate ? new Date(tool.warrantyEndDate).toLocaleDateString() : 'N/A' },
@@ -59,7 +59,7 @@ const ToolViewPage = () => {
                             <Circle size={24} className="text-green-500" />
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                            <p><strong>{t('tool.type')}:</strong> {toolType.category}</p>
+                            <p><strong>{t('tool.type')}:</strong> {toolType.category?.name}</p>
                             <p><strong>{t('tool.rfid')}:</strong> {tool.rfid}</p>
                             <p><strong>{t('tool.category')}/{t('tool.serialNumber')}:</strong> {tool.serialNumber}</p>
                         </div>

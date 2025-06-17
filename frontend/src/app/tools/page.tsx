@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { Grid, List, ChevronDown, ChevronUp } from 'lucide-react';
@@ -11,6 +11,7 @@ import Image from 'next/image';
 import ToolInstanceForm from '@/components/ToolInstanceForm';
 import { getImageUrl } from '@/lib/utils';
 import SafeImage from '@/components/SafeImage';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 interface ToolInstance {
     id: number;
@@ -31,16 +32,26 @@ interface ToolType {
 }
 
 const ToolsPage = () => {
-    const { t } = useTranslation();
+    const { t } = useTranslation('common');
+    const queryClient = useQueryClient();
     const [expanded, setExpanded] = useState<Record<number, boolean>>({});
     const [searchTerms, setSearchTerms] = useState<Record<number, string>>({});
     const [showForm, setShowForm] = useState(false);
+    const [editingInstance, setEditingInstance] = useState<ToolInstance | null>(null);
+    const [deletingInstance, setDeletingInstance] = useState<ToolInstance | null>(null);
 
     const { data: toolTypesData, isLoading, isError } = useQuery<{ data: ToolType[] }>({
         queryKey: ['tool-types'],
         queryFn: () => api.get('/tool-types').then(res => res.data),
     });
     const toolTypes = toolTypesData?.data;
+
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => api.delete(`/tool-instances/${id}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tool-types'] });
+        },
+    });
 
     const toggleExpand = (id: number) => {
         setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
@@ -160,7 +171,9 @@ const ToolsPage = () => {
                                                     name: type.name,
                                                     image: type.image,
                                                     category: type.category,
-                                                }} 
+                                                }}
+                                                onEdit={() => setEditingInstance(instance)}
+                                                onDelete={() => setDeletingInstance(instance)}
                                             />
                                         ))}
                                     </div>
@@ -171,7 +184,27 @@ const ToolsPage = () => {
                 })}
             </div>
 
-            {showForm && <ToolInstanceForm onFormSubmit={() => setShowForm(false)} />}
+            {(showForm || editingInstance) && (
+                <ToolInstanceForm
+                    instance={editingInstance}
+                    onFormSubmit={() => {
+                        setShowForm(false);
+                        setEditingInstance(null);
+                    }}
+                />
+            )}
+
+            {deletingInstance && (
+                <ConfirmationModal
+                    title={t('tools.deleteConfirmTitle')}
+                    message={t('tools.deleteConfirmMessage', { name: deletingInstance.serialNumber || deletingInstance.id })}
+                    onConfirm={() => {
+                        deleteMutation.mutate(deletingInstance.id);
+                        setDeletingInstance(null);
+                    }}
+                    onCancel={() => setDeletingInstance(null)}
+                />
+            )}
         </div>
     );
 };

@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { getImageUrl } from '@/lib/utils';
 import SafeImage from './SafeImage';
+import useAuth from '@/hooks/useAuth';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface ToolInstance {
     id: number;
@@ -15,6 +17,7 @@ interface ToolInstance {
     condition: string;
     instanceImage?: string;
     location?: { name: string };
+    category?: { name: string };
 }
 
 interface ToolType {
@@ -23,9 +26,10 @@ interface ToolType {
     category?: { name: string };
 }
 
-const ToolInstanceCard = ({ instance, toolType }: { instance: ToolInstance, toolType: ToolType }) => {
-    const { t } = useTranslation();
+const ToolInstanceCard = ({ instance, toolType, onEdit, onDelete }: { instance: ToolInstance, toolType: ToolType, onEdit: () => void, onDelete: () => void }) => {
+    const { t } = useTranslation('common');
     const router = useRouter();
+    const { user } = useAuth();
 
     const getStatusClasses = (status: string) => {
         switch (status) {
@@ -77,9 +81,21 @@ const ToolInstanceCard = ({ instance, toolType }: { instance: ToolInstance, tool
                     </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">{t('toolInstanceCard.location', { location: instance.location?.name || 'N/A' })}</p>
-                <div className="mt-4 flex gap-2">
-                    <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">{t('toolInstanceCard.checkout')}</button>
-                    <button className="bg-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-400">{t('toolInstanceCard.book')}</button>
+                <div className="mt-4 flex justify-between items-center">
+                    <div className="flex gap-2">
+                        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">{t('toolInstanceCard.checkout')}</button>
+                        <button className="bg-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-400">{t('toolInstanceCard.book')}</button>
+                    </div>
+                    {(user?.role === 'admin' || user?.role === 'manager') && (
+                        <div className="flex gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="text-blue-500 hover:text-blue-700">
+                                <Edit size={20} />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-red-500 hover:text-red-700">
+                                <Trash2 size={20} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

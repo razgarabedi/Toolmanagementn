@@ -38,6 +38,58 @@
         "checkout": "Checkout",
         "book": "Book"
     },
+    "tools": {
+        "loadError": "Error loading tools.",
+        "scan": "Scan",
+        "newToolInstance": "New Tool Instance",
+        "search": {
+            "title": "Search",
+            "placeholder": "Search by tool name..."
+        },
+        "status": {
+            "title": "Status",
+            "all": "All Statuses"
+        },
+        "category": {
+            "title": "Category",
+            "all": "All Categories"
+        },
+        "typeFilter": {
+            "title": "Type",
+            "all": "All Types"
+        },
+        "viewMode": "View as",
+        "available": "Available",
+        "checkedOut": "Checked Out",
+        "total": "Total",
+        "instanceSearchPlaceholder": "Search instances by RFID or serial number...",
+        "deleteConfirmTitle": "Delete Tool Instance?",
+        "deleteConfirmMessage": "Are you sure you want to delete this tool instance ({{name}})? This action cannot be undone."
+    },
+    "tool": {
+        "loadError": "Error loading tool details.",
+        "type": "Type",
+        "rfid": "RFID",
+        "category": "Category",
+        "serialNumber": "Serial Number",
+        "tabs": {
+            "details": "Details",
+            "bookings": "Bookings",
+            "maintenance": "Maintenance",
+            "attachments": "Attachments"
+        },
+        "description": "Description",
+        "location": "Location",
+        "manufacturer": "Manufacturer",
+        "purchaseDate": "Purchase Date",
+        "cost": "Cost",
+        "warrantyEndDate": "Warranty End Date",
+        "directCheckout": "Direct Checkout",
+        "requestBooking": "Request Booking",
+        "logMaintenance": "Log Maintenance",
+        "editTool": "Edit Tool",
+        "lifecycle": "Lifecycle"
+    },
     "users": {
         "title": "Users"
     },
@@ -83,5 +135,17 @@
     "save": "Save",
     "saving": "Saving...",
     "loading": "Loading...",
-    "delete": "Delete"
+    "delete": "Delete",
+    "toolTypeForm": {
+        "title": "Add New Tool Type",
+        "editTitle": "Edit Tool Type",
+        "nameLabel": "Name",
+        "descriptionLabel": "Description",
+        "categoryLabel": "Category",
+        "selectCategory": "Select Category",
+        "imageLabel": "Image",
+        "createSuccess": "Tool type created successfully.",
+        "updateSuccess": "Tool type updated successfully.",
+        "error": "Error saving tool type."
+    }
 } 

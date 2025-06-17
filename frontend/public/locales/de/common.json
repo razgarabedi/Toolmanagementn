@@ -4,15 +4,15 @@
         "toolType": "Werkzeugtyp",
         "selectToolType": "Werkzeugtyp auswählen",
         "instanceName": "Instanzname (vom Typ)",
-        "rfid": "RFID Tag ID",
-        "serialNumber": "Seriennummer (Instanzspezifisch)",
+        "rfid": "RFID-Tag-ID",
+        "serialNumber": "Seriennummer (instanzspezifisch)",
         "description": "Beschreibung (vom Typ)",
         "instanceImage": "Instanzbild (überschreibt Typbild)",
         "category": "Kategorie (vom Typ)",
         "manufacturer": "Hersteller (vom Typ)",
         "status": "Status",
         "status.available": "Verfügbar",
-        "status.in_use": "In Gebrauch",
+        "status.in_use": "In Benutzung",
         "status.in_maintenance": "In Wartung",
         "status.booked": "Gebucht",
         "condition": "Zustand",
@@ -21,22 +21,74 @@
         "condition.fair": "Mittel",
         "condition.poor": "Schlecht",
         "purchaseDate": "Kaufdatum",
-        "cost": "Kaufkosten (€)",
+        "cost": "Kosten (€)",
         "location": "Standort",
         "selectLocation": "Standort auswählen",
-        "warrantyEndDate": "Garantieablaufdatum",
+        "warrantyEndDate": "Garantieende",
         "attachments": "Anhänge",
         "cancel": "Abbrechen",
         "save": "Instanz hinzufügen",
-        "saveAndNew": "Speichern & Neu hinzufügen",
+        "saveAndNew": "Speichern & Neu anlegen",
         "createSuccess": "Werkzeuginstanz erfolgreich erstellt.",
         "error": "Fehler beim Erstellen der Werkzeuginstanz."
     },
     "toolInstanceCard": {
-        "serialNumber": "Seriennummer: {{serialNumber}}",
+        "serialNumber": "Seriennr: {{serialNumber}}",
         "location": "Standort: {{location}}",
-        "checkout": "Ausbuchen",
+        "checkout": "Ausleihen",
         "book": "Buchen"
+    },
+    "tools": {
+        "loadError": "Fehler beim Laden der Werkzeuge.",
+        "scan": "Scannen",
+        "newToolInstance": "Neue Werkzeuginstanz",
+        "search": {
+            "title": "Suche",
+            "placeholder": "Nach Werkzeugnamen suchen..."
+        },
+        "status": {
+            "title": "Status",
+            "all": "Alle Status"
+        },
+        "category": {
+            "title": "Kategorie",
+            "all": "Alle Kategorien"
+        },
+        "typeFilter": {
+            "title": "Typ",
+            "all": "Alle Typen"
+        },
+        "viewMode": "Ansicht als",
+        "available": "Verfügbar",
+        "checkedOut": "Ausgeliehen",
+        "total": "Gesamt",
+        "instanceSearchPlaceholder": "Suche Instanzen nach RFID oder Seriennummer...",
+        "deleteConfirmTitle": "Werkzeuginstanz löschen?",
+        "deleteConfirmMessage": "Sind Sie sicher, dass Sie diese Werkzeuginstanz ({{name}}) löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+    },
+    "tool": {
+        "loadError": "Fehler beim Laden der Werkzeugdetails.",
+        "type": "Typ",
+        "rfid": "RFID",
+        "category": "Kategorie",
+        "serialNumber": "Seriennummer",
+        "tabs": {
+            "details": "Details",
+            "bookings": "Buchungen",
+            "maintenance": "Wartung",
+            "attachments": "Anhänge"
+        },
+        "description": "Beschreibung",
+        "location": "Standort",
+        "manufacturer": "Hersteller",
+        "purchaseDate": "Kaufdatum",
+        "cost": "Kosten",
+        "warrantyEndDate": "Garantieende",
+        "directCheckout": "Direkt ausleihen",
+        "requestBooking": "Buchung anfragen",
+        "logMaintenance": "Wartung protokollieren",
+        "editTool": "Werkzeug bearbeiten",
+        "lifecycle": "Lebenszyklus"
     },
     "users": {
         "title": "Benutzer"
@@ -49,7 +101,7 @@
             "general": "Allgemein"
         },
         "masterData": {
-            "add": "Neu hinzufügen",
+            "add": "Neu anlegen",
             "error": "Daten konnten nicht geladen werden.",
             "name": "Name",
             "actions": "Aktionen",
@@ -59,7 +111,7 @@
             "locations": "Standorte",
             "addTitle": "{{resource}} hinzufügen",
             "editTitle": "{{resource}} bearbeiten",
-            "formError": "Fehler beim Speichern von {{resource}}. Bitte versuchen Sie es erneut.",
+            "formError": "Konnte {{resource}} nicht speichern. Bitte versuchen Sie es erneut.",
             "deleteConfirmTitle": "{{resource}} löschen?",
             "deleteConfirm": "Sind Sie sicher, dass Sie diese {{resource}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
             "addSuccess": "{{resource}} erfolgreich hinzugefügt.",
@@ -70,7 +122,7 @@
         "general": {
             "theme": {
                 "title": "Erscheinungsbild",
-                "description": "Wählen Sie das Aussehen der Anwendung. Ihre Auswahl wird für den nächsten Besuch gespeichert."
+                "description": "Wählen Sie das Aussehen der Anwendung. Dies wird für Ihren nächsten Besuch gespeichert."
             },
             "registration": {
                 "title": "Benutzerregistrierung",
@@ -82,6 +134,18 @@
     "cancel": "Abbrechen",
     "save": "Speichern",
     "saving": "Speichern...",
-    "loading": "Wird geladen...",
-    "delete": "Löschen"
+    "loading": "Laden...",
+    "delete": "Löschen",
+    "toolTypeForm": {
+        "title": "Neuen Werkzeugtyp anlegen",
+        "editTitle": "Werkzeugtyp bearbeiten",
+        "nameLabel": "Name",
+        "descriptionLabel": "Beschreibung",
+        "categoryLabel": "Kategorie",
+        "selectCategory": "Kategorie auswählen",
+        "imageLabel": "Bild",
+        "createSuccess": "Werkzeugtyp erfolgreich erstellt.",
+        "updateSuccess": "Werkzeugtyp erfolgreich aktualisiert.",
+        "error": "Fehler beim Speichern des Werkzeugtyps."
+    }
 }

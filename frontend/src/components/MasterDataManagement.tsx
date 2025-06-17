@@ -13,6 +13,7 @@ import ToolTypeFormModal from './ToolTypeFormModal';
 interface DataItem {
   id: number;
   name: string;
+  [key: string]: any;
 }
 
 interface MasterDataManagementProps {
@@ -114,26 +115,19 @@ const MasterDataManagement: React.FC<MasterDataManagementProps> = ({ resource, t
           </tbody>
         </table>
       </div>
-      {isModalOpen && resource === 'tool-type' && selectedItem === null && (
+      {isModalOpen && resource === 'tool-type' ? (
         <ToolTypeFormModal
+          toolType={selectedItem}
           onClose={() => setIsModalOpen(false)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['tool-types'] });
-            setIsModalOpen(false);
-          }}
         />
-      )}
-      {isModalOpen && (resource !== 'tool-type' || selectedItem !== null) && (
+      ) : isModalOpen ? (
         <MasterDataFormModal
           resource={resource}
           title={title}
           item={selectedItem}
           onClose={() => setIsModalOpen(false)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: [resourcePath] });
-          }}
         />
-      )}
+      ) : null}
       {isConfirmOpen && (
         <ConfirmationModal
           title={t('settings.masterData.deleteConfirmTitle', { resource: title })}
