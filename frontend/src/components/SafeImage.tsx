@@ -5,10 +5,11 @@ import Image, { type ImageProps } from 'next/image';
 
 interface SafeImageProps extends ImageProps {
   fallbackSrc: string;
+  alt: string;
 }
 
 const SafeImage = (props: SafeImageProps) => {
-  const { src, fallbackSrc, ...rest } = props;
+  const { src, fallbackSrc, alt, ...rest } = props;
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ const SafeImage = (props: SafeImageProps) => {
   return (
     <Image
       {...rest}
+      alt={alt}
       src={error ? fallbackSrc : src || fallbackSrc}
       onError={() => {
         setError(true);

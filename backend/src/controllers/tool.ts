@@ -30,7 +30,7 @@ export const createTool = async (req: AuthRequest, res: Response) => {
         const { toolTypeId, rfid, serialNumber, status, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
 
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-        const instanceImage = files.instanceImage ? files.instanceImage[0].path : undefined;
+        const instanceImage = files?.instanceImage ? files.instanceImage[0].path : undefined;
 
         const tool = await Tool.create({
             toolTypeId,
@@ -48,7 +48,7 @@ export const createTool = async (req: AuthRequest, res: Response) => {
             instanceImage,
         }, { transaction: t });
 
-        if (files.attachments) {
+        if (files?.attachments) {
             const attachments = files.attachments.map(file => ({
                 fileName: file.originalname,
                 filePath: file.path,
@@ -133,40 +133,76 @@ export const getTool = async (req: Request, res: Response) => {
 };
 
 export const updateTool = async (req: AuthRequest, res: Response) => {
-  try {
     const { id } = req.params;
-    const { toolTypeId, rfid, serialNumber, status, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
-    const tool = await Tool.findByPk(id);
-    if (tool) {
-      await tool.update({ toolTypeId, rfid, serialNumber, status, condition, purchaseDate: purchaseDate || null, cost, warrantyEndDate: warrantyEndDate || null, locationId, manufacturerId, description, name });
-      res.status(200).json(tool);
-    } else {
-      res.status(404).json({ message: 'Tool not found' });
+    const t = await sequelize.transaction();
+
+    try {
+        const { toolTypeId, rfid, serialNumber, status, condition, purchaseDate, cost, warrantyEndDate, locationId, manufacturerId, description, name } = req.body;
+        const tool = await Tool.findByPk(id, { transaction: t });
+
+        if (!tool) {
+            await t.rollback();
+            return res.status(404).json({ message: 'Tool not found' });
+        }
+
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        const instanceImage = files?.instanceImage ? files.instanceImage[0].path : tool.instanceImage;
+
+        await tool.update({
+            toolTypeId,
+            rfid,
+            serialNumber,
+            status,
+            condition,
+            purchaseDate: purchaseDate || null,
+            cost,
+            warrantyEndDate: warrantyEndDate || null,
+            locationId,
+            manufacturerId,
+            description,
+            name,
+            instanceImage
+        }, { transaction: t });
+
+        if (files?.attachments) {
+            await Attachment.destroy({ where: { toolId: id }, transaction: t });
+            const attachments = files.attachments.map(file => ({
+                fileName: file.originalname,
+                filePath: file.path,
+                toolId: tool.id
+            }));
+            await Attachment.bulkCreate(attachments, { transaction: t });
+        }
+
+        await t.commit();
+        const updatedTool = await Tool.findByPk(id, { include: ['attachments']});
+        res.status(200).json(updatedTool);
+
+    } catch (error: any) {
+        await t.rollback();
+        if (error instanceof ValidationError || error instanceof UniqueConstraintError) {
+            return res.status(400).json({
+                message: "Validation Error",
+                errors: (error as any).errors.map((e: any) => ({
+                    field: e.path,
+                    message: e.message
+                }))
+            });
+        }
+        if (error instanceof ForeignKeyConstraintError) {
+            return res.status(400).json({
+                message: "Invalid reference to another entity",
+                error: {
+                    field: (error as any).fields[0],
+                }
+            });
+        }
+        console.error("Error updating tool:", error);
+        if (error.message.includes('File upload only supports')) {
+            return res.status(400).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Error updating tool' });
     }
-  } catch (error: any) {
-    if (error instanceof ValidationError || error instanceof UniqueConstraintError) {
-        return res.status(400).json({
-            message: "Validation Error",
-            errors: (error as any).errors.map((e: any) => ({
-                field: e.path,
-                message: e.message
-            }))
-        });
-    }
-    if (error instanceof ForeignKeyConstraintError) {
-        return res.status(400).json({
-            message: "Invalid reference to another entity",
-            error: {
-                field: (error as any).fields[0],
-            }
-        });
-    }
-    console.error("Error updating tool:", error);
-    if (error.message.includes('File upload only supports')) {
-        return res.status(400).json({ message: error.message });
-    }
-    res.status(500).json({ message: 'Error updating tool' });
-  }
 };
 
 export const deleteTool = async (req: Request, res: Response) => {

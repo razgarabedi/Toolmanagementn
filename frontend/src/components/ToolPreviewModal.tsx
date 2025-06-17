@@ -1,61 +1,89 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
-import Image from 'next/image';
 import Spinner from '@/components/Spinner';
-import { Circle, Wrench, CheckCircle, Edit, History, Bookmark } from 'lucide-react';
+import { Circle, Wrench, CheckCircle, Edit, History, Bookmark, X } from 'lucide-react';
+import SafeImage from '@/components/SafeImage';
+import { getImageUrl } from '@/lib/utils';
 
-const ToolViewPage = () => {
+interface ToolPreviewModalProps {
+  toolId: number;
+  onClose: () => void;
+}
+
+const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
     const { t, i18n } = useTranslation('common');
-    const params = useParams();
-    const { id } = params;
     const [activeTab, setActiveTab] = useState('details');
 
     const { data: tool, isLoading, isError } = useQuery({
-        queryKey: ['tool', id],
-        queryFn: () => api.get(`/tools/${id}`).then(res => res.data),
-        enabled: !!id,
+        queryKey: ['tool', toolId],
+        queryFn: () => api.get(`/tools/${toolId}`).then(res => res.data),
+        enabled: !!toolId,
     });
 
-    if (isLoading || !i18n.isInitialized) return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
-    if (isError) return <div className="text-center mt-10">{t('tool.loadError')}</div>;
-    if (!tool) return null;
+    useEffect(() => {
+        const handleEsc = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, [onClose]);
 
-    const { toolType } = tool;
-
-    const detailItems = [
-        { label: t('tool.description'), value: toolType.description },
-        { label: t('tool.location'), value: tool.location?.name },
-        { label: t('tool.manufacturer'), value: toolType.manufacturer?.name },
-        { label: t('tool.purchaseDate'), value: tool.purchaseDate ? new Date(tool.purchaseDate).toLocaleDateString() : 'N/A' },
-        { label: t('tool.cost'), value: tool.cost ? `${tool.cost.toFixed(2)} €` : 'N/A' },
-        { label: t('tool.warrantyEndDate'), value: tool.warrantyEndDate ? new Date(tool.warrantyEndDate).toLocaleDateString() : 'N/A' },
-    ];
+    const renderContent = () => {
+        if (isLoading || !i18n.isInitialized) {
+            return <div className="flex justify-center items-center p-8"><Spinner /></div>;
+        }
     
-    const actionButtons = [
-        { label: t('tool.directCheckout'), icon: CheckCircle, color: 'purple' },
-        { label: t('tool.requestBooking'), icon: Bookmark, color: 'white' },
-        { label: t('tool.logMaintenance'), icon: Wrench, color: 'white' },
-        { label: t('tool.editTool'), icon: Edit, color: 'white' },
-        { label: t('tool.lifecycle'), icon: History, color: 'white' },
-    ];
+        if (isError) {
+            return <div className="text-center p-8">{t('tool.loadError')}</div>;
+        }
+    
+        if (!tool) return null;
 
-    return (
-        <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+        const { toolType } = tool;
+
+        const detailItems = [
+            { label: t('tool.description'), value: tool.description || toolType.description },
+            { label: t('tool.location'), value: tool.location?.name },
+            { label: t('tool.manufacturer'), value: toolType.manufacturer?.name },
+            { label: t('tool.purchaseDate'), value: tool.purchaseDate ? new Date(tool.purchaseDate).toLocaleDateString() : 'N/A' },
+            { label: t('tool.cost'), value: tool.cost ? `${tool.cost.toFixed(2)} €` : 'N/A' },
+            { label: t('tool.warrantyEndDate'), value: tool.warrantyEndDate ? new Date(tool.warrantyEndDate).toLocaleDateString() : 'N/A' },
+        ];
+        
+        const actionButtons = [
+            { label: t('tool.directCheckout'), icon: CheckCircle, color: 'purple' },
+            { label: t('tool.requestBooking'), icon: Bookmark, color: 'white' },
+            { label: t('tool.logMaintenance'), icon: Wrench, color: 'white' },
+            { label: t('tool.editTool'), icon: Edit, color: 'white' },
+            { label: t('tool.lifecycle'), icon: History, color: 'white' },
+        ];
+
+        return (
+            <>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1">
                         <div className="relative w-full h-80 rounded-lg overflow-hidden">
-                            <Image src={toolType.image || '/images/tools/default.jpg'} alt={toolType.name} layout="fill" objectFit="cover" />
+                            <SafeImage 
+                                src={getImageUrl(tool.instanceImage) || getImageUrl(toolType.image)}
+                                fallbackSrc="/vercel.svg"
+                                alt={tool.name || toolType.name}
+                                layout="fill" 
+                                objectFit="cover" 
+                                unoptimized
+                            />
                         </div>
                     </div>
                     <div className="lg:col-span-2">
                         <div className="flex justify-between items-start">
-                            <h1 className="text-3xl font-bold">{toolType.name}</h1>
+                            <h1 className="text-3xl font-bold">{tool.name || toolType.name}</h1>
                             <Circle size={24} className="text-green-500" />
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
@@ -96,9 +124,25 @@ const ToolViewPage = () => {
                         </button>
                     ))}
                 </div>
+            </>
+        )
+    }
+
+    return (
+        <div className="fixed inset-0 custom-backdrop-blur flex justify-center items-center z-50" onClick={onClose}>
+            <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full m-4 max-h-[95vh] overflow-y-auto flex flex-col animate-slide-up" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+                <div className="p-4 border-b flex justify-between items-center">
+                    <h2 className="text-xl font-bold">{t('tool.previewTitle')}</h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
+                        <X size={24} />
+                    </button>
+                </div>
+                <div className="p-6">
+                    {renderContent()}
+                </div>
             </div>
         </div>
     );
 };
 
-export default ToolViewPage; 
+export default ToolPreviewModal; 

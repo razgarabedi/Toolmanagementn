@@ -12,23 +12,25 @@ import ToolInstanceForm from '@/components/ToolInstanceForm';
 import { getImageUrl } from '@/lib/utils';
 import SafeImage from '@/components/SafeImage';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import ToolPreviewModal from '@/components/ToolPreviewModal';
 
 interface ToolInstance {
     id: number;
+    name: string;
+    description: string;
     status: 'available' | 'in_use' | 'checked_out' | 'in_maintenance' | 'booked';
     rfid?: string;
     serialNumber?: string;
     condition: string;
-}
-
-interface ToolType {
-    id: number;
-    name: string;
-    image?: string;
-    category?: {
+    location?: { name: string };
+    toolType?: {
+        id: number;
         name: string;
+        image?: string;
+        category?: {
+            name: string;
+        };
     };
-    instances?: ToolInstance[];
 }
 
 const ToolsPage = () => {
@@ -39,17 +41,17 @@ const ToolsPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingInstance, setEditingInstance] = useState<ToolInstance | null>(null);
     const [deletingInstance, setDeletingInstance] = useState<ToolInstance | null>(null);
+    const [previewingInstanceId, setPreviewingInstanceId] = useState<number | null>(null);
 
-    const { data: toolTypesData, isLoading, isError } = useQuery<{ data: ToolType[] }>({
-        queryKey: ['tool-types'],
-        queryFn: () => api.get('/tool-types').then(res => res.data),
+    const { data: tools, isLoading, isError } = useQuery<ToolInstance[]>({
+        queryKey: ['tools'],
+        queryFn: () => api.get('/tools').then(res => res.data),
     });
-    const toolTypes = toolTypesData?.data;
 
     const deleteMutation = useMutation({
-        mutationFn: (id: number) => api.delete(`/tool-instances/${id}`),
+        mutationFn: (id: number) => api.delete(`/tools/${id}`),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['tool-types'] });
+            queryClient.invalidateQueries({ queryKey: ['tools'] });
         },
     });
 
@@ -69,6 +71,21 @@ const ToolsPage = () => {
         const checkedOut = instances.filter(i => i.status === 'in_use' || i.status === 'checked_out').length;
         return { available, checkedOut, total: instances.length };
     };
+
+    const groupedTools = (tools || []).reduce((acc, tool) => {
+        const { toolType } = tool;
+        if (!toolType) {
+            return acc;
+        }
+        if (!acc[toolType.id]) {
+            acc[toolType.id] = {
+                ...toolType,
+                instances: [],
+            };
+        }
+        acc[toolType.id].instances.push(tool);
+        return acc;
+    }, {} as Record<number, { id: number; name: string; image?: string; category?: { name: string; }; instances: ToolInstance[] }>);
 
     return (
         <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
@@ -121,12 +138,13 @@ const ToolsPage = () => {
             </div>
 
             <div className="space-y-4">
-                {toolTypes?.map((type) => {
+                {Object.values(groupedTools).map((type) => {
                     const instances = type.instances || [];
                     const counts = getStatusCounts(instances);
                     const filteredInstances = instances.filter((instance) =>
                         (instance.rfid?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '') ||
-                        (instance.serialNumber?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '')
+                        (instance.serialNumber?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '') ||
+                        (instance.name?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '')
                     );
 
                     return (
@@ -136,7 +154,7 @@ const ToolsPage = () => {
                                     <SafeImage
                                         src={getImageUrl(type.image) || ''}
                                         fallbackSrc="/vercel.svg"
-                                        alt={type.name}
+                                        alt={type.name || 'Tool Type Image'}
                                         layout="fill"
                                         objectFit="cover"
                                     />
@@ -164,16 +182,12 @@ const ToolsPage = () => {
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                         {filteredInstances.map((instance) => (
-                                            <ToolInstanceCard 
-                                                key={instance.id} 
-                                                instance={instance} 
-                                                toolType={{
-                                                    name: type.name,
-                                                    image: type.image,
-                                                    category: type.category,
-                                                }}
+                                            <ToolInstanceCard
+                                                key={instance.id}
+                                                instance={instance}
                                                 onEdit={() => setEditingInstance(instance)}
                                                 onDelete={() => setDeletingInstance(instance)}
+                                                onPreview={() => setPreviewingInstanceId(instance.id)}
                                             />
                                         ))}
                                     </div>
@@ -203,6 +217,13 @@ const ToolsPage = () => {
                         setDeletingInstance(null);
                     }}
                     onCancel={() => setDeletingInstance(null)}
+                />
+            )}
+
+            {previewingInstanceId && (
+                <ToolPreviewModal 
+                    toolId={previewingInstanceId}
+                    onClose={() => setPreviewingInstanceId(null)}
                 />
             )}
         </div>

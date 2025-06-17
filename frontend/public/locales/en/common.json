@@ -1,6 +1,7 @@
 {
     "toolInstanceForm": {
         "addTitle": "Add New Tool Instance",
+        "editTitle": "Edit Tool Instance",
         "toolType": "Tool Type",
         "selectToolType": "Select Tool Type",
         "instanceName": "Instance Name (from Type)",
@@ -27,10 +28,13 @@
         "warrantyEndDate": "Warranty End Date",
         "attachments": "Attachments",
         "cancel": "Cancel",
-        "save": "Add Instance",
+        "save": "Save",
+        "add": "Add Instance",
         "saveAndNew": "Save & Add New",
         "createSuccess": "Tool instance created successfully.",
-        "error": "Error creating tool instance."
+        "updateSuccess": "Tool instance updated successfully.",
+        "error": "Error creating tool instance.",
+        "title": "Tool Instance"
     },
     "toolInstanceCard": {
         "serialNumber": "Serial No: {{serialNumber}}",
@@ -88,7 +92,8 @@
         "requestBooking": "Request Booking",
         "logMaintenance": "Log Maintenance",
         "editTool": "Edit Tool",
-        "lifecycle": "Lifecycle"
+        "lifecycle": "Lifecycle",
+        "previewTitle": "Tool Preview"
     },
     "users": {
         "title": "Users"
@@ -132,7 +137,6 @@
         "placeholder": "{{tab}} content will go here."
     },
     "cancel": "Cancel",
-    "save": "Save",
     "saving": "Saving...",
     "loading": "Loading...",
     "delete": "Delete",

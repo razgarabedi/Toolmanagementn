@@ -3,7 +3,6 @@
 import React from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
-import { useRouter } from 'next/navigation';
 import { getImageUrl } from '@/lib/utils';
 import SafeImage from './SafeImage';
 import useAuth from '@/hooks/useAuth';
@@ -11,24 +10,24 @@ import { Edit, Trash2 } from 'lucide-react';
 
 interface ToolInstance {
     id: number;
+    name: string;
+    description: string;
     rfid?: string;
     serialNumber?: string;
     status: string;
     condition: string;
     instanceImage?: string;
     location?: { name: string };
-    category?: { name: string };
+    toolType: {
+        id: number;
+        name: string;
+        image?: string;
+        category?: { name: string };
+    };
 }
 
-interface ToolType {
-    name: string;
-    image?: string;
-    category?: { name: string };
-}
-
-const ToolInstanceCard = ({ instance, toolType, onEdit, onDelete }: { instance: ToolInstance, toolType: ToolType, onEdit: () => void, onDelete: () => void }) => {
+const ToolInstanceCard = ({ instance, onEdit, onDelete, onPreview }: { instance: ToolInstance, onEdit: () => void, onDelete: () => void, onPreview: () => void }) => {
     const { t } = useTranslation('common');
-    const router = useRouter();
     const { user } = useAuth();
 
     const getStatusClasses = (status: string) => {
@@ -43,7 +42,7 @@ const ToolInstanceCard = ({ instance, toolType, onEdit, onDelete }: { instance: 
     }
 
     const instanceImageUrl = getImageUrl(instance.instanceImage);
-    const toolTypeImageUrl = getImageUrl(toolType.image);
+    const toolTypeImageUrl = getImageUrl(instance.toolType?.image);
 
     const getConditionClasses = (condition: string) => {
         switch (condition) {
@@ -57,21 +56,21 @@ const ToolInstanceCard = ({ instance, toolType, onEdit, onDelete }: { instance: 
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer" onClick={() => router.push(`/tools/${instance.id}`)}>
+        <div className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer" onClick={onPreview}>
             <div className="relative h-40">
                 <SafeImage
                     src={instanceImageUrl || toolTypeImageUrl || ''}
                     fallbackSrc="/vercel.svg"
-                    alt={toolType.name}
+                    alt={instance.name || 'Tool Image'}
                     layout="fill"
                     objectFit="cover"
                 />
             </div>
             <div className="p-4">
-                <h3 className="font-bold text-lg">{toolType.name}</h3>
+                <h3 className="font-bold text-lg">{instance.name}</h3>
                 <p className="text-sm text-gray-500">{`RFID: ${instance.rfid || 'N/A'}`}</p>
                 <p className="text-sm text-gray-500">{t('toolInstanceCard.serialNumber', { serialNumber: instance.serialNumber || 'N/A' })}</p>
-                <p className="text-sm text-gray-500">{toolType.category?.name}</p>
+                <p className="text-sm text-gray-500">{instance.toolType?.category?.name}</p>
                 <div className="mt-2 flex gap-2">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(instance.status)}`}>
                         {t(`toolInstanceForm.status.${instance.status}`)}

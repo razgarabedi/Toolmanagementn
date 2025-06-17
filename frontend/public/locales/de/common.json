@@ -1,6 +1,7 @@
 {
     "toolInstanceForm": {
         "addTitle": "Neue Werkzeuginstanz hinzufügen",
+        "editTitle": "Werkzeuginstanz bearbeiten",
         "toolType": "Werkzeugtyp",
         "selectToolType": "Werkzeugtyp auswählen",
         "instanceName": "Instanzname (vom Typ)",
@@ -27,10 +28,13 @@
         "warrantyEndDate": "Garantieende",
         "attachments": "Anhänge",
         "cancel": "Abbrechen",
-        "save": "Instanz hinzufügen",
+        "save": "Speichern",
+        "add": "Instanz hinzufügen",
         "saveAndNew": "Speichern & Neu anlegen",
         "createSuccess": "Werkzeuginstanz erfolgreich erstellt.",
-        "error": "Fehler beim Erstellen der Werkzeuginstanz."
+        "updateSuccess": "Werkzeuginstanz erfolgreich aktualisiert.",
+        "error": "Fehler beim Erstellen der Werkzeuginstanz.",
+        "title": "Werkzeug-Instanz"
     },
     "toolInstanceCard": {
         "serialNumber": "Seriennr: {{serialNumber}}",
@@ -88,7 +92,8 @@
         "requestBooking": "Buchung anfragen",
         "logMaintenance": "Wartung protokollieren",
         "editTool": "Werkzeug bearbeiten",
-        "lifecycle": "Lebenszyklus"
+        "lifecycle": "Lebenszyklus",
+        "previewTitle": "Werkzeug-Vorschau"
     },
     "users": {
         "title": "Benutzer"

@@ -10,6 +10,7 @@ import ToolTypeFormModal from './ToolTypeFormModal';
 import MasterDataFormModal from './MasterDataFormModal';
 import Image from 'next/image';
 import axios from 'axios';
+import { X } from 'lucide-react';
 
 interface ToolInstanceFormData {
     toolTypeId: string;
@@ -43,6 +44,22 @@ interface Location {
 interface Manufacturer {
     id: number;
     name: string;
+}
+
+interface ToolInstance {
+    id: number;
+    name?: string;
+    toolTypeId?: string;
+    rfid?: string;
+    serialNumber?: string;
+    status?: string;
+    condition?: string;
+    purchaseDate?: string;
+    cost?: string;
+    warrantyEndDate?: string;
+    locationId?: string;
+    manufacturerId?: string;
+    description?: string;
 }
 
 const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance | null, onFormSubmit: () => void }) => {
@@ -97,9 +114,9 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
                 serialNumber: instance.serialNumber || '',
                 status: instance.status || 'available',
                 condition: instance.condition || 'new',
-                purchaseDate: instance.purchaseDate || '',
+                purchaseDate: instance.purchaseDate ? new Date(instance.purchaseDate).toISOString().split('T')[0] : '',
                 cost: instance.cost || '',
-                warrantyEndDate: instance.warrantyEndDate || '',
+                warrantyEndDate: instance.warrantyEndDate ? new Date(instance.warrantyEndDate).toISOString().split('T')[0] : '',
                 locationId: instance.locationId || '',
                 manufacturerId: instance.manufacturerId || '',
                 instanceImage: null,
@@ -130,7 +147,7 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
         if (formData.toolTypeId) {
             const toolType = toolTypes?.find(tt => tt.id === parseInt(formData.toolTypeId));
             setSelectedToolType(toolType || null);
-            if (toolType) {
+            if (toolType && !instance) {
                 setFormData(prev => ({
                     ...prev, 
                     description: toolType.description || '',
@@ -139,22 +156,24 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
             }
         } else {
             setSelectedToolType(null);
-            setFormData(prev => ({
-                ...prev, 
-                description: '',
-                name: ''
-            }));
+            if (!instance) {
+                setFormData(prev => ({
+                    ...prev, 
+                    description: '',
+                    name: ''
+                }));
+            }
         }
-    }, [formData.toolTypeId, toolTypes]);
+    }, [formData.toolTypeId, toolTypes, instance]);
 
     const mutation = useMutation({
         mutationFn: (formData: FormData) => {
             if (instance) {
-                return api.put(`/tool-instances/${instance.id}`, formData, {
+                return api.put(`/tools/${instance.id}`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
-            return api.post('/tool-instances', formData, {
+            return api.post('/tools', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
         }
@@ -177,8 +196,13 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>, closeOnSubmit: boolean = true) => {
         e.preventDefault();
         const postData = new FormData();
-        (Object.keys(formData) as Array<keyof ToolInstanceFormData>).forEach(key => {
-            const value = formData[key];
+
+        const dataToSubmit: Partial<ToolInstanceFormData> = { ...formData };
+        if (!dataToSubmit.purchaseDate) dataToSubmit.purchaseDate = null;
+        if (!dataToSubmit.warrantyEndDate) dataToSubmit.warrantyEndDate = null;
+
+        (Object.keys(dataToSubmit) as Array<keyof ToolInstanceFormData>).forEach(key => {
+            const value = dataToSubmit[key];
             if (key === 'attachments' && Array.isArray(value)) {
                 value.forEach((file: File) => {
                     postData.append('attachments', file);
@@ -192,7 +216,7 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
         });
         mutation.mutate(postData, {
             onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ['tool-instances'] });
+                queryClient.invalidateQueries({ queryKey: ['tools'] });
                 queryClient.invalidateQueries({ queryKey: ['tool-types'] });
                 toast.success(t(instance ? 'toolInstanceForm.updateSuccess' : 'toolInstanceForm.success'));
                 if (closeOnSubmit) {
@@ -218,26 +242,45 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
             },
             onError: (error: unknown) => {
                 let message = t('toolInstanceForm.error');
-                if (axios.isAxiosError<{ message: string }>(error) && error.response?.data?.message) {
-                    message = error.response.data.message;
+                if (axios.isAxiosError(error) && error.response?.data) {
+                    const responseData = error.response.data as { message: string, errors: {field: string, message: string}[] };
+                    if (responseData.message) {
+                        message = responseData.message;
+                    }
+                    if (responseData.errors && Array.isArray(responseData.errors)) {
+                        const errorDetails = responseData.errors.map((e) => `${e.field}: ${e.message}`).join(', ');
+                        message = `${message}: ${errorDetails}`;
+                    }
                 }
-                toast.error(message);
+                toast.error(message, { duration: 6000 });
             }
         });
     
     };
 
-    return (
-        <>
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">{instance ? t('toolInstanceForm.editTitle') : t('toolInstanceForm.addTitle')}</h2>
-                        <button onClick={onFormSubmit} className="text-gray-500 hover:text-gray-800">&times;</button>
-                    </div>
+    useEffect(() => {
+        const handleEsc = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onFormSubmit();
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+        };
+    }, [onFormSubmit]);
 
-                    <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
-                        {/* Form fields will go here */}
+    return (
+        <div className="fixed inset-0 custom-backdrop-blur flex justify-center items-center z-50" onClick={onFormSubmit}>
+            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto flex flex-col animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4 border-b flex justify-between items-center">
+                    <h2 className="text-xl font-bold">{instance ? t('toolInstanceForm.editTitle') : t('toolInstanceForm.addTitle')}</h2>
+                    <button onClick={onFormSubmit} className="text-gray-500 hover:text-gray-800">
+                        <X size={24} />
+                    </button>
+                </div>
+                <div className="p-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Werkzeugtyp */}
                             <div className="col-span-2">
@@ -353,14 +396,24 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
                             </div>
                         </div>
                         
-                        <div className="flex justify-end space-x-4">
-                            <button type="button" onClick={onFormSubmit} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">{t('toolInstanceForm.cancel')}</button>
-                            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" disabled={mutation.isPending}>
-                                {mutation.isPending ? <Spinner /> : t('toolInstanceForm.save')}
+                        <div className="flex justify-end space-x-4 pt-4 border-t">
+                            <button type="button" onClick={onFormSubmit} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
+                                {t('toolInstanceForm.cancel')}
                             </button>
-                            <button type="button" onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>, false)} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" disabled={mutation.isPending}>
-                                {t('toolInstanceForm.saveAndNew')}
-                            </button>
+                            {instance && instance.id ? (
+                                <button type="submit" className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors" disabled={mutation.isPending}>
+                                    {mutation.isPending ? <Spinner size="sm" /> : t('toolInstanceForm.save')}
+                                </button>
+                            ) : (
+                                <>
+                                    <button type="button" onClick={(e) => handleSubmit(e as any, false)} className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors" disabled={mutation.isPending}>
+                                        {mutation.isPending ? <Spinner size="sm" /> : t('toolInstanceForm.saveAndNew')}
+                                    </button>
+                                    <button type="submit" className="px-6 py-2 bg-purple-800 text-white rounded-md hover:bg-purple-900 transition-colors" disabled={mutation.isPending}>
+                                        {mutation.isPending ? <Spinner size="sm" /> : t('toolInstanceForm.add')}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </form>
                 </div>
@@ -373,6 +426,10 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
                         queryClient.setQueryData(['tool-types'], (old: ToolType[] | undefined) => [...(old || []), newToolType]);
                         setFormData(prev => ({ ...prev, toolTypeId: newToolType.id.toString() }));
                         setIsToolTypeModalOpen(false);
+                    }}
+                    onFormSubmit={() => {
+                        setIsLocationModalOpen(false);
+                        queryClient.invalidateQueries({ queryKey: ['locations'] });
                     }}
                 />
             )}
@@ -402,7 +459,7 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
                     }}
                 />
             )}
-        </>
+        </div>
     );
 };
 
