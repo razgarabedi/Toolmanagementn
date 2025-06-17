@@ -25,7 +25,7 @@ export const createToolType = async (req: Request, res: Response) => {
 
 export const getToolTypes = async (req: Request, res: Response) => {
     try {
-        const toolTypes = await ToolType.findAll({
+        const toolTypes = await ToolType.scope('withInstances').findAll({
             include: [{ model: Category, as: 'category' }]
         });
         res.status(200).json({ data: toolTypes });
