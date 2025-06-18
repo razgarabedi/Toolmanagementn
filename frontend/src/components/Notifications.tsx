@@ -120,9 +120,9 @@ const Notifications = () => {
                                 }`}
                                 onClick={() => handleNotificationClick(notification)}
                             >
-                                <p className={notification.isRead ? 'text-gray-500 dark:text-gray-400' : ''}>
+                                <div className={notification.isRead ? 'text-gray-500 dark:text-gray-400' : ''}>
                                     {renderMessage(notification)}
-                                </p>
+                                </div>
                             </li>
                         ))}
                         {unreadCount === 0 && <li className="p-4 text-center text-gray-500">{t('notifications.none')}</li>}

@@ -97,20 +97,27 @@ const BookingCard = ({ booking, t }: { booking: Booking, t: TFunction }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col justify-between">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col justify-between">
       <div>
         <div className="flex justify-between items-start">
-            <h3 className="font-bold text-lg">{booking.tool.name}</h3>
+            <h3 className="font-bold text-lg dark:text-white">{booking.tool.name}</h3>
             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(booking.status)}`}>
                 {t(`bookings.statusValues.${booking.status}`)}
             </span>
         </div>
-        <p className="text-sm text-gray-500">{t('bookings.rfid')}: {booking.tool.rfid}</p>
-        <div className="mt-4 text-sm space-y-2">
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('bookings.rfid')}: {booking.tool.rfid}</p>
+        <div className="mt-4 text-sm space-y-2 text-gray-700 dark:text-gray-300">
           <p><span className="font-semibold">{t('bookings.bookedBy')}:</span> {booking.user.username}</p>
           <p><span className="font-semibold">{t('bookings.period')}:</span> {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}</p>
           <p><span className="font-semibold">{t('bookings.bookedOn')}:</span> {new Date(booking.createdAt).toLocaleString()}</p>
-          {booking.notes && <p><span className="font-semibold">{t('bookings.notes')}:</span> {booking.notes}</p>}
+          {booking.notes && (
+            <div className="pt-2">
+                <span className="font-semibold">{t('bookings.notes')}:</span>
+                <blockquote className="mt-1 p-2 border-l-4 border-gray-300 dark:border-gray-500 bg-gray-50 dark:bg-gray-700 rounded-r-lg">
+                    <p className="text-sm italic text-gray-600 dark:text-gray-300">{booking.notes}</p>
+                </blockquote>
+            </div>
+          )}
         </div>
       </div>
       <BookingActions booking={booking} t={t} />
@@ -134,34 +141,34 @@ const BookingsPage = () => {
   const bookingStatuses = ['pending', 'approved', 'active', 'completed', 'rejected', 'cancelled'];
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
        <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{t('nav.bookings')}</h1>
+        <h1 className="text-3xl font-bold dark:text-white">{t('nav.bookings')}</h1>
         <div className="flex items-center gap-2">
-            <span>{t('bookings.viewOptions')}:</span>
+            <span className="dark:text-gray-300">{t('bookings.viewOptions')}:</span>
             <button 
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-purple-200 text-purple-700' : ''}`}>
+                className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-purple-200 text-purple-700' : 'dark:text-gray-400'}`}>
                 <Grid size={20} />
             </button>
             <button 
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-purple-200 text-purple-700' : ''}`}>
+                className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-purple-200 text-purple-700' : 'dark:text-gray-400'}`}>
                 <List size={20} />
             </button>
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('bookings.status.title')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('bookings.status.title')}</label>
              <div className="relative">
                 <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20}/>
                 <select 
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="pl-10 block w-full p-2 border border-gray-300 rounded-md appearance-none" 
+                    className="pl-10 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md appearance-none bg-white dark:bg-gray-700 dark:text-white"
                     autoComplete="off"
                 >
                     <option value="">{t('bookings.status.all')}</option>
@@ -179,7 +186,7 @@ const BookingsPage = () => {
         {bookings?.map(booking => (
           <BookingCard key={booking.id} booking={booking} t={t} />
         ))}
-        {bookings?.length === 0 && <p className="text-center col-span-full">{t('bookings.noBookingsFound')}</p>}
+        {bookings?.length === 0 && <p className="text-center col-span-full dark:text-gray-400">{t('bookings.noBookingsFound')}</p>}
       </div>
     </div>
   );
