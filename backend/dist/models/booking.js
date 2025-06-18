@@ -42,9 +42,15 @@ Booking.init({
         allowNull: false,
     },
     status: {
-        type: sequelize_1.DataTypes.ENUM('booked', 'active', 'completed', 'cancelled'),
+        type: sequelize_1.DataTypes.ENUM('pending', 'approved', 'rejected', 'active', 'completed', 'cancelled'),
         allowNull: false,
+        defaultValue: 'pending',
     },
+    overdueNotified: {
+        type: sequelize_1.DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: false
+    }
 }, {
     tableName: 'bookings',
     sequelize: db_1.default,

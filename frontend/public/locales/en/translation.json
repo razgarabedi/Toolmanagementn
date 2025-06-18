@@ -192,9 +192,12 @@
     "notes": "Notes",
     "approvalPending": "Approval pending",
     "approve": "Approve",
-    "decline": "Decline",
+    "reject": "Reject",
+    "cancel": "Cancel",
     "checkedOut": "Checked out",
     "checkIn": "Check in",
+    "checkout": "Checkout",
+    "checkin": "Check in",
     "search": {
       "title": "Search",
       "placeholder": "Tool, RFID, user..."
@@ -203,10 +206,21 @@
       "title": "Status",
       "all": "All"
     },
+    "statusValues": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
     "user": {
       "title": "User",
       "all": "All"
-    }
+    },
+    "genericError": "An error occurred. Please try again.",
+    "rfid": "RFID",
+    "noBookingsFound": "No bookings found."
   },
   "calendar": {
     "selectTool": "Select a tool",
@@ -248,19 +262,7 @@
     "save": "Save",
     "saveAndNew": "Save & New",
     "createSuccess": "Tool instance created successfully!",
-    "error": "An error occurred",
-    "status": {
-      "available": "Available",
-      "in_use": "In Use",
-      "in_maintenance": "In Maintenance",
-      "booked": "Booked"
-    },
-    "condition": {
-      "new": "New",
-      "good": "Good",
-      "fair": "Fair",
-      "poor": "Poor"
-    }
+    "error": "An error occurred"
   },
   "categoryForm": {
     "title": "Create New Category",

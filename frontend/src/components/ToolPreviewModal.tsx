@@ -1,53 +1,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import Spinner from '@/components/Spinner';
 import { Circle, Wrench, CheckCircle, Edit, History, Bookmark, X } from 'lucide-react';
 import SafeImage from '@/components/SafeImage';
 import { getImageUrl } from '@/lib/utils';
-import BookingForm from './BookingForm';
-import toast from 'react-hot-toast';
 
 interface ToolPreviewModalProps {
-  toolId: number;
-  onClose: () => void;
+    tool: any;
+    onClose: () => void;
+    onBook: () => void;
+    onCheckout: () => void;
+    onCheckin: () => void;
 }
 
-const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
+const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: ToolPreviewModalProps) => {
     const { t, i18n } = useTranslation('common');
     const [activeTab, setActiveTab] = useState('details');
-    const [showBookingForm, setShowBookingForm] = useState(false);
     const queryClient = useQueryClient();
 
-    const { data: tool, isLoading, isError, refetch } = useQuery({
-        queryKey: ['tool', toolId],
-        queryFn: () => api.get(`/tools/${toolId}`).then(res => res.data),
-        enabled: !!toolId,
+    const { data: toolDetails, isLoading, isError } = useQuery({
+        queryKey: ['tool', tool.id],
+        queryFn: () => api.get(`/tools/${tool.id}`).then(res => res.data),
+        initialData: tool,
     });
-
-    const checkoutMutation = useMutation({
-        mutationFn: () => api.post(`/tools/${toolId}/checkout`),
-        onSuccess: () => {
-            toast.success(t('tool.checkoutSuccess'));
-            queryClient.invalidateQueries({ queryKey: ['tool', toolId] });
-            queryClient.invalidateQueries({ queryKey: ['tools'] });
-            onClose();
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || t('tool.checkoutError'));
-        }
-    });
-
-    const handleCheckout = () => {
-        if (tool.status === 'available' || tool.status === 'booked') {
-            checkoutMutation.mutate();
-        } else {
-            toast.error(t('tool.notAvailableForCheckout'));
-        }
-    };
 
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
@@ -70,27 +49,19 @@ const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
             return <div className="text-center p-8">{t('tool.loadError')}</div>;
         }
     
-        if (!tool) return null;
+        if (!toolDetails) return null;
 
-        const { toolType } = tool;
+        const { toolType } = toolDetails;
 
         const detailItems = [
-            { label: t('tool.description'), value: tool.description || toolType.description },
-            { label: t('tool.location'), value: tool.location?.name },
+            { label: t('tool.description'), value: toolDetails.description || toolType.description },
+            { label: t('tool.location'), value: toolDetails.location?.name },
             { label: t('tool.manufacturer'), value: toolType.manufacturer?.name },
-            { label: t('tool.purchaseDate'), value: tool.purchaseDate ? new Date(tool.purchaseDate).toLocaleDateString() : 'N/A' },
-            { label: t('tool.cost'), value: tool.cost ? `${tool.cost.toFixed(2)} €` : 'N/A' },
-            { label: t('tool.warrantyEndDate'), value: tool.warrantyEndDate ? new Date(tool.warrantyEndDate).toLocaleDateString() : 'N/A' },
+            { label: t('tool.purchaseDate'), value: toolDetails.purchaseDate ? new Date(toolDetails.purchaseDate).toLocaleDateString() : 'N/A' },
+            { label: t('tool.cost'), value: toolDetails.cost ? `${toolDetails.cost.toFixed(2)} €` : 'N/A' },
+            { label: t('tool.warrantyEndDate'), value: toolDetails.warrantyEndDate ? new Date(toolDetails.warrantyEndDate).toLocaleDateString() : 'N/A' },
         ];
         
-        const actionButtons = [
-            { label: t('tool.directCheckout'), icon: CheckCircle, color: 'purple' },
-            { label: t('tool.requestBooking'), icon: Bookmark, color: 'white' },
-            { label: t('tool.logMaintenance'), icon: Wrench, color: 'white' },
-            { label: t('tool.editTool'), icon: Edit, color: 'white' },
-            { label: t('tool.lifecycle'), icon: History, color: 'white' },
-        ];
-
         const getStatusIndicator = (status: string) => {
             switch (status) {
                 case 'available': return <Circle size={24} className="text-green-500" />;
@@ -107,9 +78,9 @@ const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
                     <div className="lg:col-span-1">
                         <div className="relative w-full h-80 rounded-lg overflow-hidden">
                             <SafeImage 
-                                src={getImageUrl(tool.instanceImage) || getImageUrl(toolType.image) || ''}
+                                src={getImageUrl(toolDetails.instanceImage) || getImageUrl(toolType.image) || ''}
                                 fallbackSrc="/vercel.svg"
-                                alt={tool.name || toolType.name}
+                                alt={toolDetails.name || toolType.name}
                                 layout="fill" 
                                 objectFit="cover" 
                                 unoptimized
@@ -118,13 +89,13 @@ const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
                     </div>
                     <div className="lg:col-span-2">
                         <div className="flex justify-between items-start">
-                            <h1 className="text-3xl font-bold">{tool.name || toolType.name}</h1>
-                            {getStatusIndicator(tool.status)}
+                            <h1 className="text-3xl font-bold">{toolDetails.name || toolType.name}</h1>
+                            {getStatusIndicator(toolDetails.status)}
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                             <p><strong>{t('tool.type')}:</strong> {toolType.category?.name}</p>
-                            <p><strong>{t('tool.rfid')}:</strong> {tool.rfid}</p>
-                            <p><strong>{t('tool.category')}/{t('tool.serialNumber')}:</strong> {tool.serialNumber}</p>
+                            <p><strong>{t('tool.rfid')}:</strong> {toolDetails.rfid}</p>
+                            <p><strong>{t('tool.category')}/{t('tool.serialNumber')}:</strong> {toolDetails.serialNumber}</p>
                         </div>
                         
                         <div className="mt-6 border-b border-gray-200">
@@ -151,33 +122,29 @@ const ToolPreviewModal = ({ toolId, onClose }: ToolPreviewModalProps) => {
                     </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-gray-200 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    <button onClick={handleCheckout} disabled={tool.status !== 'available'} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-purple-600 text-white disabled:bg-gray-400`}>
-                        <CheckCircle size={16} />
-                        <span>{t('tool.directCheckout')}</span>
-                    </button>
-                    <button onClick={() => setShowBookingForm(true)} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-white border border-gray-300`}>
-                        <Bookmark size={16} />
-                        <span>{t('tool.requestBooking')}</span>
-                    </button>
-                    {actionButtons.slice(2).map(btn => (
-                        <button key={btn.label} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold ${btn.color === 'purple' ? 'bg-purple-600 text-white' : 'bg-white border border-gray-300'}`}>
-                            <btn.icon size={16} />
-                            <span>{btn.label}</span>
+                <div className="mt-8 pt-6 border-t border-gray-200 flex flex-wrap gap-4">
+                     {toolDetails.status === 'available' ? (
+                        <>
+                            <button onClick={onCheckout} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-purple-600 text-white`}>
+                                <CheckCircle size={16} />
+                                <span>{t('tool.directCheckout')}</span>
+                            </button>
+                            <button onClick={onBook} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-white border border-gray-300`}>
+                                <Bookmark size={16} />
+                                <span>{t('tool.requestBooking')}</span>
+                            </button>
+                        </>
+                    ) : toolDetails.status === 'in_use' ? (
+                        <button onClick={onCheckin} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-yellow-500 text-white`}>
+                            <Wrench size={16} />
+                            <span>{t('tool.checkIn')}</span>
                         </button>
-                    ))}
+                    ) : null}
+                     <button className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-white border border-gray-300`}>
+                        <Wrench size={16} />
+                        <span>{t('tool.logMaintenance')}</span>
+                    </button>
                 </div>
-
-                {showBookingForm && (
-                    <BookingForm
-                        toolId={toolId}
-                        onClose={() => setShowBookingForm(false)}
-                        onSuccess={() => {
-                            setShowBookingForm(false);
-                            refetch();
-                        }}
-                    />
-                )}
             </>
         )
     }

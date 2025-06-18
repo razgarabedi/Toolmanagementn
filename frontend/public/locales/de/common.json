@@ -46,7 +46,8 @@
     "toolInstanceCard": {
         "serialNumber": "Seriennr: {{serialNumber}}",
         "location": "Standort: {{location}}",
-        "checkout": "Ausleihen",
+        "checkout": "Auschecken",
+        "checkin": "Einchecken",
         "book": "Buchen"
     },
     "tools": {
@@ -75,7 +76,8 @@
         "total": "Gesamt",
         "instanceSearchPlaceholder": "Suche Instanzen nach RFID oder Seriennummer...",
         "deleteConfirmTitle": "Werkzeuginstanz löschen?",
-        "deleteConfirmMessage": "Sind Sie sicher, dass Sie diese Werkzeuginstanz ({{name}}) löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+        "deleteConfirmMessage": "Sind Sie sicher, dass Sie diese Werkzeuginstanz ({{name}}) löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "previewTitle": "Werkzeug-Vorschau"
     },
     "tool": {
         "loadError": "Fehler beim Laden der Werkzeugdetails.",
@@ -100,7 +102,39 @@
         "logMaintenance": "Wartung protokollieren",
         "editTool": "Werkzeug bearbeiten",
         "lifecycle": "Lebenszyklus",
-        "previewTitle": "Werkzeug-Vorschau"
+        "checkIn": "Einchecken"
+    },
+    "bookings": {
+        "loadError": "Fehler beim Laden der Buchungen.",
+        "viewOptions": "Ansicht:",
+        "search": {
+            "title": "Suchen",
+            "placeholder": "Nach Werkzeug oder Benutzer suchen..."
+        },
+        "status": {
+            "title": "Status",
+            "all": "Alle Status"
+        },
+        "statusValues": {
+            "pending": "Ausstehend",
+            "approved": "Genehmigt",
+            "rejected": "Abgelehnt",
+            "active": "Aktiv",
+            "completed": "Abgeschlossen",
+            "cancelled": "Storniert"
+        },
+        "user": {
+            "title": "Benutzer",
+            "all": "Alle Benutzer"
+        },
+        "bookedBy": "Gebucht von",
+        "period": "Zeitraum",
+        "bookedOn": "Gebucht am",
+        "notes": "Notizen",
+        "approve": "Genehmigen",
+        "reject": "Ablehnen",
+        "cancel": "Stornieren",
+        "noBookingsFound": "Keine Buchungen mit den aktuellen Filtern gefunden."
     },
     "users": {
         "title": "Benutzer"

@@ -10,4 +10,6 @@ const upload_1 = __importDefault(require("../middleware/upload"));
 const router = (0, express_1.Router)();
 router.post('/', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager']), upload_1.default.single('image')], toolType_1.createToolType);
 router.get('/', auth_1.auth, toolType_1.getToolTypes);
+router.put('/:id', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager']), upload_1.default.single('image')], toolType_1.updateToolType);
+router.delete('/:id', [auth_1.auth, (0, auth_1.authorize)(['admin'])], toolType_1.deleteToolType);
 exports.default = router;

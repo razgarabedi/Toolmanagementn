@@ -44,6 +44,28 @@ const MyBookingsPage = () => {
         }
     });
 
+    const checkOutMutation = useMutation({
+        mutationFn: (bookingId: number) => api.put(`/bookings/${bookingId}/checkout`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
+            toast.success('Tool checked out successfully!');
+        },
+        onError: (error: { response?: { data?: { message?: string } } }) => {
+            toast.error(error.response?.data?.message || 'Failed to check out tool.');
+        }
+    });
+
+    const checkInMutation = useMutation({
+        mutationFn: (bookingId: number) => api.put(`/bookings/${bookingId}/checkin`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
+            toast.success('Tool checked in successfully!');
+        },
+        onError: (error: { response?: { data?: { message?: string } } }) => {
+            toast.error(error.response?.data?.message || 'Failed to check in tool.');
+        }
+    });
+
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
             router.push('/login');
@@ -86,12 +108,30 @@ const MyBookingsPage = () => {
                                     <td className="border px-4 py-2">{booking.status}</td>
                                     <td className="border px-4 py-2">
                                         {booking.status === 'booked' && (
-                                            <button 
-                                                onClick={() => cancelMutation.mutate(booking.id)}
-                                                className="bg-red-500 text-white px-2 py-1 rounded"
-                                                disabled={cancelMutation.isPending}
+                                            <>
+                                                <button 
+                                                    onClick={() => checkOutMutation.mutate(booking.id)}
+                                                    className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+                                                    disabled={checkOutMutation.isPending}
+                                                >
+                                                    Check Out
+                                                </button>
+                                                <button 
+                                                    onClick={() => cancelMutation.mutate(booking.id)}
+                                                    className="bg-red-500 text-white px-2 py-1 rounded"
+                                                    disabled={cancelMutation.isPending}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </>
+                                        )}
+                                        {booking.status === 'active' && (
+                                            <button
+                                                onClick={() => checkInMutation.mutate(booking.id)}
+                                                className="bg-blue-500 text-white px-2 py-1 rounded"
+                                                disabled={checkInMutation.isPending}
                                             >
-                                                Cancel
+                                                Check In
                                             </button>
                                         )}
                                     </td>

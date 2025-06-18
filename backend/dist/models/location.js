@@ -8,7 +8,10 @@ const sequelize_1 = require("sequelize");
 const db_1 = __importDefault(require("../db"));
 class Location extends sequelize_1.Model {
     static associate(models) {
-        Location.hasMany(models.Tool, { as: 'tools', foreignKey: 'locationId' });
+        Location.hasMany(models.Tool, {
+            as: 'tools',
+            foreignKey: 'locationId',
+        });
     }
 }
 exports.Location = Location;

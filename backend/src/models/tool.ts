@@ -9,6 +9,7 @@ interface ToolAttributes {
   toolTypeId: number;
   rfid?: string;
   serialNumber?: string;
+  status: 'available' | 'in_use' | 'in_maintenance' | 'booked';
   condition: 'new' | 'good' | 'fair' | 'poor';
   currentOwnerId?: number;
   purchaseDate?: Date | null;
@@ -29,6 +30,7 @@ class Tool extends Model<ToolAttributes, ToolCreationAttributes> implements Tool
   public toolTypeId!: number;
   public rfid?: string;
   public serialNumber?: string;
+  public status!: 'available' | 'in_use' | 'in_maintenance' | 'booked';
   public condition!: 'new' | 'good' | 'fair' | 'poor';
   public currentOwnerId?: number;
   public purchaseDate!: Date | null;
@@ -82,6 +84,11 @@ Tool.init(
         type: DataTypes.STRING,
         allowNull: true,
         unique: true
+    },
+    status: {
+      type: DataTypes.ENUM('available', 'in_use', 'in_maintenance', 'booked'),
+      allowNull: false,
+      defaultValue: 'available'
     },
     condition: {
       type: DataTypes.ENUM('new', 'good', 'fair', 'poor'),

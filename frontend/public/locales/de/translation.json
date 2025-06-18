@@ -192,9 +192,12 @@
     "notes": "Notizen",
     "approvalPending": "Genehmigung ausstehend",
     "approve": "Genehmigen",
-    "decline": "Ablehnen",
+    "reject": "Ablehnen",
+    "cancel": "Stornieren",
     "checkedOut": "Ausgecheckt",
     "checkIn": "Einchecken",
+    "checkout": "Auschecken",
+    "checkin": "Einchecken",
     "search": {
       "title": "Suchen",
       "placeholder": "Werkzeug, RFID, Benutzer..."
@@ -203,10 +206,21 @@
       "title": "Status",
       "all": "Alle"
     },
+    "statusValues": {
+      "pending": "Ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "active": "Aktiv",
+      "completed": "Abgeschlossen",
+      "cancelled": "Storniert"
+    },
     "user": {
       "title": "Benutzer",
       "all": "Alle"
-    }
+    },
+    "genericError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "rfid": "RFID",
+    "noBookingsFound": "Keine Buchungen gefunden."
   },
   "calendar": {
     "selectTool": "Werkzeug auswählen",
@@ -248,19 +262,7 @@
     "save": "Speichern",
     "saveAndNew": "Speichern & Neu",
     "createSuccess": "Werkzeuginstanz erfolgreich erstellt!",
-    "error": "Ein Fehler ist aufgetreten",
-    "status": {
-      "available": "Verfügbar",
-      "in_use": "In Benutzung",
-      "in_maintenance": "In Wartung",
-      "booked": "Gebucht"
-    },
-    "condition": {
-      "new": "Neu",
-      "good": "Gut",
-      "fair": "Mittelmäßig",
-      "poor": "Schlecht"
-    }
+    "error": "Ein Fehler ist aufgetreten"
   },
   "categoryForm": {
     "title": "Neue Kategorie erstellen",

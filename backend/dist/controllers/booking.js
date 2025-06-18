@@ -1,69 +1,90 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelBooking = exports.getOverdueBookings = exports.getAllBookings = exports.getToolBookings = exports.getUserBookings = exports.createBooking = void 0;
+exports.rejectBooking = exports.approveBooking = exports.checkInTool = exports.checkOutTool = exports.getMyBookings = exports.cancelBooking = exports.getOverdueBookings = exports.getAllBookings = exports.getToolBookings = exports.getUserBookings = exports.createBooking = void 0;
 const models_1 = require("../models");
 const sequelize_1 = require("sequelize");
-const createBooking = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createBooking = async (req, res) => {
     try {
-        const { toolId, startDate, endDate } = req.body;
-        const userId = req.user.id;
-        const tool = yield models_1.Tool.findByPk(toolId);
+        const { toolId, startDate, endDate, userId: providedUserId, status } = req.body;
+        let userId = req.user.id;
+        // Admins/Managers can specify a user
+        if (['admin', 'manager'].includes(req.user.role) && providedUserId) {
+            userId = providedUserId;
+        }
+        if (!toolId || !startDate || !endDate) {
+            return res.status(400).json({ message: 'Tool ID, start date, and end date are required.' });
+        }
+        const tool = await models_1.Tool.findByPk(toolId);
         if (!tool) {
             return res.status(404).json({ message: 'Tool not found' });
         }
-        const conflictingBooking = yield models_1.Booking.findOne({
+        const requestedStartDate = new Date(startDate);
+        const requestedEndDate = new Date(endDate);
+        if (requestedStartDate >= requestedEndDate) {
+            return res.status(400).json({ message: 'End date must be after start date.' });
+        }
+        // Check for conflicting bookings
+        const conflictingBooking = await models_1.Booking.findOne({
             where: {
                 toolId,
-                status: { [sequelize_1.Op.ne]: 'cancelled' },
-                [sequelize_1.Op.or]: [
-                    {
-                        startDate: {
-                            [sequelize_1.Op.between]: [startDate, endDate],
-                        },
-                    },
-                    {
-                        endDate: {
-                            [sequelize_1.Op.between]: [startDate, endDate],
-                        },
-                    },
-                ],
+                status: { [sequelize_1.Op.in]: ['pending', 'approved', 'active'] },
+                startDate: { [sequelize_1.Op.lt]: requestedEndDate },
+                endDate: { [sequelize_1.Op.gt]: requestedStartDate }
             },
         });
         if (conflictingBooking) {
-            return res.status(409).json({ message: 'Tool is already booked for this period.' });
+            return res.status(409).json({ message: 'Tool is already booked or has a pending request for this period.' });
         }
-        const booking = yield models_1.Booking.create({
+        // Check for conflicting maintenances
+        const conflictingMaintenance = await models_1.Maintenance.findOne({
+            where: {
+                toolId,
+                status: { [sequelize_1.Op.notIn]: ['completed'] },
+                startDate: { [sequelize_1.Op.lt]: requestedEndDate },
+                endDate: { [sequelize_1.Op.gt]: requestedStartDate }
+            }
+        });
+        if (conflictingMaintenance) {
+            return res.status(409).json({ message: 'Tool is scheduled for maintenance during this period.' });
+        }
+        let finalStatus = 'pending';
+        if (status === 'active') {
+            finalStatus = 'active'; // Direct checkout bypasses approval
+        }
+        else if (req.user.role === 'admin' || req.user.role === 'manager') {
+            finalStatus = status || 'pending';
+        }
+        const booking = await models_1.Booking.create({
             toolId,
             userId,
-            startDate,
-            endDate,
-            status: 'booked',
+            startDate: requestedStartDate,
+            endDate: requestedEndDate,
+            status: finalStatus,
         });
+        let notificationMessage = `Your booking for tool #${toolId} from ${requestedStartDate.toLocaleDateString()} to ${requestedEndDate.toLocaleDateString()} has been submitted for approval.`;
+        if (finalStatus === 'active') {
+            notificationMessage = `You have checked out tool #${toolId} until ${requestedEndDate.toLocaleDateString()}.`;
+        }
+        else if (finalStatus === 'approved') {
+            notificationMessage = `Your booking for tool #${toolId} has been approved.`;
+        }
         // Create a notification for the user
-        yield models_1.Notification.create({
+        await models_1.Notification.create({
             userId,
-            message: `Your booking for tool #${toolId} from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()} has been confirmed.`
+            message: notificationMessage,
         });
         res.status(201).json(booking);
     }
     catch (error) {
+        console.error("Error creating booking: ", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.createBooking = createBooking;
-const getUserBookings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getUserBookings = async (req, res) => {
     try {
         const userId = req.user.id;
-        const bookings = yield models_1.Booking.findAll({
+        const bookings = await models_1.Booking.findAll({
             where: { userId },
             include: [{
                     model: models_1.Tool,
@@ -77,35 +98,41 @@ const getUserBookings = (req, res) => __awaiter(void 0, void 0, void 0, function
         console.error("Error in getUserBookings:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getUserBookings = getUserBookings;
-const getToolBookings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getToolBookings = async (req, res) => {
     try {
         const { toolId } = req.params;
-        const bookings = yield models_1.Booking.findAll({ where: { toolId, status: { [sequelize_1.Op.ne]: 'cancelled' } } });
+        const bookings = await models_1.Booking.findAll({ where: { toolId, status: { [sequelize_1.Op.ne]: 'cancelled' } } });
         res.status(200).json(bookings);
     }
     catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getToolBookings = getToolBookings;
-const getAllBookings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllBookings = async (req, res) => {
     try {
-        const bookings = yield models_1.Booking.findAll({
-            where: { status: { [sequelize_1.Op.ne]: 'cancelled' } },
-            include: ['tool', 'user']
+        const { status } = req.query;
+        const where = {};
+        if (status) {
+            where.status = status;
+        }
+        const bookings = await models_1.Booking.findAll({
+            where,
+            include: ['tool', 'user'],
+            order: [['createdAt', 'DESC']]
         });
         res.status(200).json(bookings);
     }
     catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getAllBookings = getAllBookings;
-const getOverdueBookings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getOverdueBookings = async (req, res) => {
     try {
-        const overdueBookings = yield models_1.Booking.findAll({
+        const overdueBookings = await models_1.Booking.findAll({
             where: {
                 status: 'active',
                 endDate: {
@@ -131,25 +158,136 @@ const getOverdueBookings = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error("Error in getOverdueBookings:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getOverdueBookings = getOverdueBookings;
-const cancelBooking = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const cancelBooking = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
-        const booking = yield models_1.Booking.findByPk(id);
+        const booking = await models_1.Booking.findByPk(id);
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
         if (booking.userId !== userId && req.user.role !== 'admin' && req.user.role !== 'manager') {
             return res.status(403).json({ message: 'You are not authorized to cancel this booking' });
         }
+        if (booking.status !== 'pending' && booking.status !== 'approved') {
+            return res.status(400).json({ message: 'Only pending or approved bookings can be cancelled.' });
+        }
         booking.status = 'cancelled';
-        yield booking.save();
+        await booking.save();
         res.status(200).json(booking);
     }
     catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.cancelBooking = cancelBooking;
+const getMyBookings = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const bookings = await models_1.Booking.findAll({
+            where: { userId },
+            include: [{ model: models_1.Tool, include: ['toolType'] }]
+        });
+        res.status(200).json(bookings);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error fetching user bookings', error });
+    }
+};
+exports.getMyBookings = getMyBookings;
+const checkOutTool = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await models_1.Booking.findByPk(id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+        if (booking.userId !== req.user.id && !['admin', 'manager'].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+        if (booking.status !== 'approved') {
+            return res.status(400).json({ message: 'Tool can only be checked out if the booking is approved.' });
+        }
+        const now = new Date();
+        if (new Date(booking.startDate) > now) {
+            return res.status(400).json({ message: 'Cannot check out a tool before the booking start date.' });
+        }
+        booking.status = 'active';
+        await booking.save();
+        res.status(200).json(booking);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+exports.checkOutTool = checkOutTool;
+const checkInTool = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await models_1.Booking.findByPk(id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+        if (booking.userId !== req.user.id && !['admin', 'manager'].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+        if (booking.status !== 'active') {
+            return res.status(400).json({ message: 'Tool can only be checked in if it is active.' });
+        }
+        booking.status = 'completed';
+        await booking.save();
+        res.status(200).json(booking);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+exports.checkInTool = checkInTool;
+const approveBooking = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await models_1.Booking.findByPk(id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+        if (booking.status !== 'pending') {
+            return res.status(400).json({ message: 'Only pending bookings can be approved.' });
+        }
+        booking.status = 'approved';
+        await booking.save();
+        await models_1.Notification.create({
+            userId: booking.userId,
+            message: `Your booking for tool #${booking.toolId} has been approved.`
+        });
+        res.status(200).json(booking);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+exports.approveBooking = approveBooking;
+const rejectBooking = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await models_1.Booking.findByPk(id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+        if (booking.status !== 'pending') {
+            return res.status(400).json({ message: 'Only pending bookings can be rejected.' });
+        }
+        booking.status = 'rejected';
+        await booking.save();
+        await models_1.Notification.create({
+            userId: booking.userId,
+            message: `Your booking for tool #${booking.toolId} has been rejected.`
+        });
+        res.status(200).json(booking);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+exports.rejectBooking = rejectBooking;

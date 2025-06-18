@@ -6,4 +6,5 @@ const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 router.post('/', [auth_1.auth, (0, auth_1.authorize)(['admin'])], category_1.createCategory);
 router.get('/', auth_1.auth, category_1.getCategories);
+router.delete('/:id', [auth_1.auth, (0, auth_1.authorize)(['admin'])], category_1.deleteCategory);
 exports.default = router;

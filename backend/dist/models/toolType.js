@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ToolType = void 0;
 const sequelize_1 = require("sequelize");
 const db_1 = __importDefault(require("../db"));
+const tool_1 = __importDefault(require("./tool"));
 class ToolType extends sequelize_1.Model {
     static associate(models) {
         ToolType.hasMany(models.Tool, {
@@ -61,4 +62,10 @@ ToolType.init({
     sequelize: db_1.default,
     tableName: 'tool_types',
     modelName: 'ToolType',
+});
+ToolType.addScope('withInstances', {
+    include: [{
+            model: tool_1.default,
+            as: 'instances'
+        }]
 });

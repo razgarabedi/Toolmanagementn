@@ -6,4 +6,5 @@ const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 router.get('/', auth_1.auth, location_1.getLocations);
 router.post('/', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], location_1.createLocation);
+router.delete('/:id', [auth_1.auth, (0, auth_1.authorize)(['admin'])], location_1.deleteLocation);
 exports.default = router;

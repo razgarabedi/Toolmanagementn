@@ -17,11 +17,12 @@ interface Booking {
 
 interface BookingFormProps {
     toolId: number;
+    userId?: number;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-const BookingForm = ({ toolId, onClose, onSuccess }: BookingFormProps) => {
+const BookingForm = ({ toolId, userId, onClose, onSuccess }: BookingFormProps) => {
     const [startDate, setStartDate] = useState<Date | null>(new Date());
     const [endDate, setEndDate] = useState<Date | null>(null);
     const queryClient = useQueryClient();
@@ -33,7 +34,7 @@ const BookingForm = ({ toolId, onClose, onSuccess }: BookingFormProps) => {
     });
 
     const mutation = useMutation({
-        mutationFn: (newBooking: { toolId: number, startDate: Date, endDate: Date }) => {
+        mutationFn: (newBooking: { toolId: number, startDate: Date, endDate: Date, userId?: number }) => {
             return api.post('/bookings', newBooking);
         },
         onSuccess: () => {
@@ -49,7 +50,7 @@ const BookingForm = ({ toolId, onClose, onSuccess }: BookingFormProps) => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (startDate && endDate) {
-            mutation.mutate({ toolId, startDate, endDate });
+            mutation.mutate({ toolId, startDate, endDate, userId });
         }
     };
     

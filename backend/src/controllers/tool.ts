@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Tool, Booking, User, ToolType, Location, Attachment, Manufacturer, Maintenance } from '../models';
+import { Tool, Booking, User, ToolType, Location, Attachment, Manufacturer, Maintenance, Category } from '../models';
 import { Op, ValidationError, UniqueConstraintError, ForeignKeyConstraintError } from 'sequelize';
 import { AuthRequest } from '../middleware/auth';
 import sequelize from '../db';
@@ -57,6 +57,7 @@ export const createTool = async (req: AuthRequest, res: Response) => {
             manufacturerId: (manufacturerId && !isNaN(parseInt(manufacturerId, 10))) ? parseInt(manufacturerId, 10) : null,
             description,
             name,
+            status: 'available',
             instanceImage,
         }, { transaction: t });
 
@@ -103,104 +104,61 @@ export const createTool = async (req: AuthRequest, res: Response) => {
 
 const calculateToolStatus = (tool: ToolWithAssociations) => {
     const now = new Date();
-    let status: 'available' | 'in_use' | 'in_maintenance' | 'booked' = 'available';
-
-    const hasActiveMaintenance = tool.maintenances?.some((m: Maintenance) =>
-        m.status === 'in_progress' && new Date(m.startDate) <= now && (!m.endDate || new Date(m.endDate) >= now)
-    );
-    if (hasActiveMaintenance) {
-        return 'in_maintenance';
-    }
-
-    const hasActiveBooking = tool.bookings?.some((b: Booking) =>
-        b.status === 'active' && new Date(b.startDate) <= now && new Date(b.endDate) >= now
-    );
-    if (hasActiveBooking) {
-        return 'in_use';
-    }
-
-    const isBookedNow = tool.bookings?.some((b: Booking) =>
-        b.status === 'booked' && new Date(b.startDate) <= now && new Date(b.endDate) >= now
-    );
-    if (isBookedNow) {
-        return 'booked';
-    }
     
-    const hasUpcomingBooking = tool.bookings?.some((b: Booking) =>
-        b.status === 'booked' && new Date(b.startDate) > now
-    );
-    if (hasUpcomingBooking) {
-        return 'booked';
-    }
+    const hasActiveMaintenance = tool.maintenances?.some(m => m.status === 'in_progress');
+    if (hasActiveMaintenance) return 'in_maintenance';
 
-    const hasUpcomingMaintenance = tool.maintenances?.some((m: Maintenance) =>
-        m.status === 'scheduled' && new Date(m.startDate) > now
-    );
-    if (hasUpcomingMaintenance) {
-        return 'in_maintenance';
-    }
+    const hasActiveBooking = tool.bookings?.some(b => b.status === 'active');
+    if (hasActiveBooking) return 'in_use';
 
-    return status;
+    const hasUpcomingOrPendingBooking = tool.bookings?.some(b => 
+        b.status === 'approved' || b.status === 'pending'
+    );
+    if (hasUpcomingOrPendingBooking) return 'booked';
+    
+    const hasUpcomingMaintenance = tool.maintenances?.some(m => m.status === 'scheduled');
+    if (hasUpcomingMaintenance) return 'in_maintenance';
+
+    return 'available';
 }
 
 export const getTools = async (req: Request, res: Response) => {
     try {
-        const { search, startDate: startDateQuery, endDate: endDateQuery, locationId, manufacturerId, toolTypeId } = req.query;
-        
-        const whereClause: any = {};
-        if (locationId) whereClause.locationId = locationId;
-        if (manufacturerId) whereClause.manufacturerId = manufacturerId;
-        if (toolTypeId) whereClause.toolTypeId = toolTypeId;
+        const { search } = req.query;
+        const where: any = {};
 
-        let toolTypeWhereClause;
-        if(search) {
-            toolTypeWhereClause = { name: { [Op.like]: `%${search}%` } };
+        if (search) {
+            where[Op.or] = [
+                { name: { [Op.like]: `%${search}%` } },
+                { description: { [Op.like]: `%${search}%` } },
+                { rfid: { [Op.like]: `%${search}%` } },
+                { serialNumber: { [Op.like]: `%${search}%` } },
+            ];
         }
 
-        let tools = await Tool.findAll({
-            where: whereClause,
+        const tools = await Tool.findAll({
+            where,
             include: [
-                { model: ToolType, as: 'toolType', where: toolTypeWhereClause },
-                { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
-                { model: Booking, as: 'bookings' },
-                { model: Maintenance, as: 'maintenances' },
-                { model: Location, as: 'location', attributes: ['id', 'name'] },
-                { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] }
+                { model: Location, as: 'location' },
+                { model: ToolType, as: 'toolType', include: [{ model: Category, as: 'category' }] },
+                { model: Booking, as: 'bookings', required: false },
+                { model: Maintenance, as: 'maintenances', required: false }
             ],
-            order: [['createdAt', 'DESC']],
+            order: [['name', 'ASC']]
         });
-
-        if (startDateQuery && endDateQuery) {
-            const requestedStartDate = new Date(startDateQuery as string);
-            const requestedEndDate = new Date(endDateQuery as string);
-
-            if (!isNaN(requestedStartDate.getTime()) && !isNaN(requestedEndDate.getTime())) {
-                tools = tools.filter(tool => {
-                    const toolWithAssocs = tool as ToolWithAssociations;
-                    const isUnavailable = toolWithAssocs.bookings?.some((b: Booking) =>
-                        (b.status === 'booked' || b.status === 'active') &&
-                        new Date(b.startDate) < requestedEndDate &&
-                        new Date(b.endDate) > requestedStartDate
-                    ) || toolWithAssocs.maintenances?.some((m: Maintenance) =>
-                        (m.status === 'scheduled' || m.status === 'in_progress') &&
-                        new Date(m.startDate) < requestedEndDate &&
-                        (m.endDate ? new Date(m.endDate) : new Date(m.startDate)) > requestedStartDate
-                    );
-                    return !isUnavailable;
-                });
-            }
-        }
 
         const toolsWithStatus = tools.map(tool => {
             const toolJson = tool.toJSON() as any;
             toolJson.status = calculateToolStatus(tool as ToolWithAssociations);
+            const activeBooking = toolJson.bookings?.find((b: any) => b.status === 'active');
+            toolJson.activeBooking = activeBooking ? { id: activeBooking.id } : null;
             return toolJson;
         });
 
         res.status(200).json(toolsWithStatus);
     } catch (error) {
         console.error("Error in getTools:", error);
-        res.status(500).json({ message: 'Something went wrong', error: (error as Error).message });
+        res.status(500).json({ message: 'Something went wrong' });
     }
 };
 
@@ -350,7 +308,7 @@ export const checkoutTool = async (req: AuthRequest, res: Response) => {
         }
 
         const toolStatus = calculateToolStatus(tool as ToolWithAssociations);
-        if (toolStatus !== 'available' && toolStatus !== 'booked') {
+        if (toolStatus !== 'available') {
             await t.rollback();
             return res.status(400).json({ message: `Tool is not available for checkout. Current status: ${toolStatus}` });
         }
@@ -373,7 +331,7 @@ export const checkoutTool = async (req: AuthRequest, res: Response) => {
             // No pre-existing booking found, create a new one for immediate checkout
             const toolWithAssocs = tool as ToolWithAssociations;
             const isUnavailable = toolWithAssocs.bookings?.some((b: Booking) =>
-                (b.status === 'booked' || b.status === 'active') &&
+                (b.status === 'approved' || b.status === 'active') &&
                 new Date(b.startDate) < new Date(now.getTime() + 1) &&
                 new Date(b.endDate) > now
             ) || toolWithAssocs.maintenances?.some((m: Maintenance) =>

@@ -13,6 +13,10 @@ import { getImageUrl } from '@/lib/utils';
 import SafeImage from '@/components/SafeImage';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import ToolPreviewModal from '@/components/ToolPreviewModal';
+import BookingForm from '@/components/BookingForm';
+import UserSelectionModal from '@/components/UserSelectionModal';
+import useAuth from '@/hooks/useAuth';
+import toast from 'react-hot-toast';
 
 interface ToolInstance {
     id: number;
@@ -22,6 +26,7 @@ interface ToolInstance {
     rfid?: string;
     serialNumber?: string;
     condition: string;
+    instanceImage?: string;
     location?: { name: string };
     toolType?: {
         id: number;
@@ -31,17 +36,26 @@ interface ToolInstance {
             name: string;
         };
     };
+    activeBooking?: { id: number };
 }
 
 const ToolsPage = () => {
     const { t } = useTranslation('common');
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [expanded, setExpanded] = useState<Record<number, boolean>>({});
     const [searchTerms, setSearchTerms] = useState<Record<number, string>>({});
     const [showForm, setShowForm] = useState(false);
     const [editingInstance, setEditingInstance] = useState<ToolInstance | null>(null);
     const [deletingInstance, setDeletingInstance] = useState<ToolInstance | null>(null);
-    const [previewingInstanceId, setPreviewingInstanceId] = useState<number | null>(null);
+    const [previewingInstance, setPreviewingInstance] = useState<ToolInstance | null>(null);
+
+    const [selectedToolId, setSelectedToolId] = useState<number | null>(null);
+    const [isBookingModalOpen, setBookingModalOpen] = useState(false);
+    const [isUserSelectModalOpen, setUserSelectModalOpen] = useState(false);
+    const [isCheckoutConfirmOpen, setCheckoutConfirmOpen] = useState(false);
+    const [actionType, setActionType] = useState<'book' | 'checkout' | null>(null);
+    const [targetUserId, setTargetUserId] = useState<number | undefined>(undefined);
 
     const { data: tools, isLoading, isError } = useQuery<ToolInstance[]>({
         queryKey: ['tools'],
@@ -53,6 +67,38 @@ const ToolsPage = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tools'] });
         },
+    });
+
+    const checkinMutation = useMutation({
+        mutationFn: (data: { bookingId: number, toolId: number }) => api.put(`/bookings/${data.bookingId}/checkin`),
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['tools']});
+            queryClient.invalidateQueries({ queryKey: ['tool', variables.toolId] });
+            toast.success("Tool checked in successfully!");
+        },
+        onError: (error: any) => toast.error(error.response?.data?.message || "Failed to check in tool."),
+    });
+
+    const checkoutMutation = useMutation({
+        mutationFn: (data: { toolId: number, userId?: number, endDate: Date }) => {
+            const { toolId, userId, endDate } = data;
+            return api.post('/bookings', {
+                toolId,
+                userId,
+                startDate: new Date(),
+                endDate,
+                status: 'active'
+            });
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['tools']});
+            queryClient.invalidateQueries({ queryKey: ['tool', variables.toolId] });
+            queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            toast.success("Tool checked out successfully!");
+            setCheckoutConfirmOpen(false);
+            setSelectedToolId(null);
+        },
+        onError: (error: any) => toast.error(error.response?.data?.message || "Failed to checkout tool."),
     });
 
     const toggleExpand = (id: number) => {
@@ -88,6 +134,54 @@ const ToolsPage = () => {
         acc[toolType.id].instances.push(tool);
         return acc;
     }, {} as Record<number, { id: number; name: string; image?: string; category?: { name: string; }; instances: ToolInstance[] }>);
+
+    const sortedToolTypes = Object.values(groupedTools).sort((a, b) => a.name.localeCompare(b.name));
+
+    const handleBookClick = (toolId: number) => {
+        setSelectedToolId(toolId);
+        if (user?.role === 'admin' || user?.role === 'manager') {
+          setActionType('book');
+          setUserSelectModalOpen(true);
+        } else {
+          setBookingModalOpen(true);
+        }
+    };
+    
+    const handleCheckoutClick = (toolId: number) => {
+        setSelectedToolId(toolId);
+        if (user?.role === 'admin' || user?.role === 'manager') {
+          setActionType('checkout');
+          setUserSelectModalOpen(true);
+        } else {
+          setCheckoutConfirmOpen(true);
+        }
+    };
+
+    const handleUserSelected = (userId: number) => {
+        setUserSelectModalOpen(false);
+        setTargetUserId(userId);
+        if (actionType === 'book') {
+          setBookingModalOpen(true);
+        } else if (actionType === 'checkout') {
+          const endDate = new Date();
+          endDate.setDate(endDate.getDate() + 7); 
+          checkoutMutation.mutate({ toolId: selectedToolId!, userId, endDate });
+        }
+    };
+      
+    const handleConfirmCheckout = () => {
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 7);
+        checkoutMutation.mutate({ toolId: selectedToolId!, endDate });
+    };
+
+    const handleCheckin = (instance: ToolInstance) => {
+        if(instance.activeBooking) {
+            checkinMutation.mutate({ bookingId: instance.activeBooking.id, toolId: instance.id });
+        } else {
+            toast.error("No active booking found for this tool.");
+        }
+    }
 
     return (
         <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
@@ -140,7 +234,7 @@ const ToolsPage = () => {
             </div>
 
             <div className="space-y-4">
-                {Object.values(groupedTools).map((type) => {
+                {sortedToolTypes.map((type) => {
                     const instances = type.instances || [];
                     const counts = getStatusCounts(instances);
                     const filteredInstances = instances.filter((instance) =>
@@ -189,7 +283,10 @@ const ToolsPage = () => {
                                                 instance={instance}
                                                 onEdit={() => setEditingInstance(instance)}
                                                 onDelete={() => setDeletingInstance(instance)}
-                                                onPreview={() => setPreviewingInstanceId(instance.id)}
+                                                onPreview={() => setPreviewingInstance(instance)}
+                                                onBook={() => handleBookClick(instance.id)}
+                                                onCheckout={() => handleCheckoutClick(instance.id)}
+                                                onCheckin={() => handleCheckin(instance)}
                                             />
                                         ))}
                                     </div>
@@ -222,10 +319,57 @@ const ToolsPage = () => {
                 />
             )}
 
-            {previewingInstanceId && (
+            {isBookingModalOpen && selectedToolId && (
+                <BookingForm 
+                toolId={selectedToolId}
+                userId={targetUserId}
+                onClose={() => {
+                    setBookingModalOpen(false);
+                    setTargetUserId(undefined);
+                }} 
+                onSuccess={() => {
+                    setBookingModalOpen(false);
+                    setTargetUserId(undefined);
+                    queryClient.invalidateQueries({ queryKey: ['tools'] });
+                    queryClient.invalidateQueries({ queryKey: ['bookings'] });
+                    if (selectedToolId) {
+                        queryClient.invalidateQueries({ queryKey: ['tool', selectedToolId] });
+                    }
+                }}
+                />
+            )}
+            {isUserSelectModalOpen && (
+                <UserSelectionModal 
+                onClose={() => setUserSelectModalOpen(false)}
+                onSelect={handleUserSelected}
+                />
+            )}
+            {isCheckoutConfirmOpen && (
+                <ConfirmationModal
+                    title="Confirm Checkout"
+                    message="Do you want to check out this tool for a default period of 7 days?"
+                    onConfirm={handleConfirmCheckout}
+                    onCancel={() => setCheckoutConfirmOpen(false)}
+                    confirmText="Checkout"
+                />
+            )}
+
+            {previewingInstance && (
                 <ToolPreviewModal 
-                    toolId={previewingInstanceId}
-                    onClose={() => setPreviewingInstanceId(null)}
+                    tool={previewingInstance}
+                    onClose={() => setPreviewingInstance(null)}
+                    onBook={() => {
+                        handleBookClick(previewingInstance.id);
+                        setPreviewingInstance(null);
+                    }}
+                    onCheckout={() => {
+                        handleCheckoutClick(previewingInstance.id);
+                        setPreviewingInstance(null);
+                    }}
+                    onCheckin={() => {
+                        handleCheckin(previewingInstance);
+                        setPreviewingInstance(null);
+                    }}
                 />
             )}
         </div>

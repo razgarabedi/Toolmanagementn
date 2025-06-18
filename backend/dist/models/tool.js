@@ -9,6 +9,7 @@ class Tool extends sequelize_1.Model {
     static associate(models) {
         Tool.belongsTo(models.User, { as: 'currentOwner', foreignKey: 'currentOwnerId' });
         Tool.hasMany(models.Booking, { as: 'bookings', foreignKey: 'toolId' });
+        Tool.hasMany(models.Maintenance, { as: 'maintenances', foreignKey: 'toolId' });
         Tool.belongsTo(models.Location, { as: 'location', foreignKey: 'locationId' });
         Tool.belongsTo(models.ToolType, { as: 'toolType', foreignKey: 'toolTypeId' });
         Tool.hasMany(models.Attachment, { as: 'attachments', foreignKey: 'toolId' });
@@ -42,10 +43,6 @@ Tool.init({
         type: sequelize_1.DataTypes.STRING,
         allowNull: true,
         unique: true
-    },
-    status: {
-        type: sequelize_1.DataTypes.ENUM('available', 'in_use', 'in_maintenance', 'booked'),
-        allowNull: false,
     },
     condition: {
         type: sequelize_1.DataTypes.ENUM('new', 'good', 'fair', 'poor'),

@@ -26,7 +26,23 @@ interface ToolInstance {
     };
 }
 
-const ToolInstanceCard = ({ instance, onEdit, onDelete, onPreview }: { instance: ToolInstance, onEdit: () => void, onDelete: () => void, onPreview: () => void }) => {
+const ToolInstanceCard = ({ 
+    instance, 
+    onEdit, 
+    onDelete, 
+    onPreview,
+    onBook,
+    onCheckout,
+    onCheckin
+}: { 
+    instance: ToolInstance, 
+    onEdit: () => void, 
+    onDelete: () => void, 
+    onPreview: () => void,
+    onBook: () => void,
+    onCheckout: () => void,
+    onCheckin: () => void
+}) => {
     const { t } = useTranslation('common');
     const { user } = useAuth();
 
@@ -81,8 +97,14 @@ const ToolInstanceCard = ({ instance, onEdit, onDelete, onPreview }: { instance:
                 <p className="text-sm text-gray-600 mt-2">{t('toolInstanceCard.location', { location: instance.location?.name || 'N/A' })}</p>
                 <div className="mt-4 flex justify-between items-center">
                     <div className="flex gap-2">
-                        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">{t('toolInstanceCard.checkout')}</button>
-                        <button className="bg-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-400">{t('toolInstanceCard.book')}</button>
+                        {instance.status === 'available' ? (
+                            <>
+                                <button onClick={(e) => { e.stopPropagation(); onCheckout(); }} className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">{t('toolInstanceCard.checkout')}</button>
+                                <button onClick={(e) => { e.stopPropagation(); onBook(); }} className="bg-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-400">{t('toolInstanceCard.book')}</button>
+                            </>
+                        ) : instance.status === 'in_use' ? (
+                            <button onClick={(e) => { e.stopPropagation(); onCheckin(); }} className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600">{t('toolInstanceCard.checkin')}</button>
+                        ) : null}
                     </div>
                     {(user?.role === 'admin' || user?.role === 'manager') && (
                         <div className="flex gap-2">

@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -16,9 +7,9 @@ exports.getMissingToolsReport = exports.getUtilizationReport = exports.getMainte
 const models_1 = require("../models");
 const db_1 = __importDefault(require("../db"));
 const sequelize_1 = require("sequelize");
-const getInventorySummary = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getInventorySummary = async (req, res) => {
     try {
-        const summary = yield models_1.Tool.findAll({
+        const summary = await models_1.Tool.findAll({
             attributes: [
                 'status',
                 [db_1.default.fn('COUNT', db_1.default.col('id')), 'count']
@@ -34,11 +25,11 @@ const getInventorySummary = (req, res) => __awaiter(void 0, void 0, void 0, func
     catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getInventorySummary = getInventorySummary;
-const getMaintenanceSummary = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMaintenanceSummary = async (req, res) => {
     try {
-        const summary = yield models_1.Maintenance.findAll({
+        const summary = await models_1.Maintenance.findAll({
             attributes: [
                 'status',
                 [db_1.default.fn('COUNT', db_1.default.col('id')), 'count']
@@ -54,11 +45,11 @@ const getMaintenanceSummary = (req, res) => __awaiter(void 0, void 0, void 0, fu
     catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getMaintenanceSummary = getMaintenanceSummary;
-const getUtilizationSummary = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getUtilizationSummary = async (req, res) => {
     try {
-        const summary = yield models_1.Booking.findAll({
+        const summary = await models_1.Booking.findAll({
             attributes: [
                 'toolId',
                 [db_1.default.fn('COUNT', db_1.default.col('toolId')), 'bookingCount']
@@ -74,11 +65,11 @@ const getUtilizationSummary = (req, res) => __awaiter(void 0, void 0, void 0, fu
         console.error(error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getUtilizationSummary = getUtilizationSummary;
-const getMaintenanceCostReport = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMaintenanceCostReport = async (req, res) => {
     try {
-        const report = yield models_1.Maintenance.findAll({
+        const report = await models_1.Maintenance.findAll({
             attributes: [
                 'toolId',
                 [db_1.default.fn('SUM', db_1.default.col('cost')), 'totalCost']
@@ -93,11 +84,11 @@ const getMaintenanceCostReport = (req, res) => __awaiter(void 0, void 0, void 0,
         console.error(error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getMaintenanceCostReport = getMaintenanceCostReport;
-const getUtilizationReport = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getUtilizationReport = async (req, res) => {
     try {
-        const tools = yield models_1.Tool.findAll({
+        const tools = await models_1.Tool.findAll({
             attributes: [
                 'id',
                 'usageCount',
@@ -108,7 +99,7 @@ const getUtilizationReport = (req, res) => __awaiter(void 0, void 0, void 0, fun
                     attributes: ['name']
                 }],
         });
-        const bookings = yield models_1.Booking.findAll({
+        const bookings = await models_1.Booking.findAll({
             where: { status: ['completed', 'checked-in'] },
             attributes: ['toolId', 'startDate', 'endDate'],
         });
@@ -131,11 +122,11 @@ const getUtilizationReport = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.error(error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getUtilizationReport = getUtilizationReport;
-const getMissingToolsReport = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMissingToolsReport = async (req, res) => {
     try {
-        const missingTools = yield models_1.Booking.findAll({
+        const missingTools = await models_1.Booking.findAll({
             where: {
                 status: 'active',
                 endDate: {
@@ -149,5 +140,5 @@ const getMissingToolsReport = (req, res) => __awaiter(void 0, void 0, void 0, fu
     catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-});
+};
 exports.getMissingToolsReport = getMissingToolsReport;

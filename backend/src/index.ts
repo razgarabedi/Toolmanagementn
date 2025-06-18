@@ -18,6 +18,7 @@ import categoryRoutes from './routes/category';
 import manufacturerRoutes from './routes/manufacturer';
 import toolTypeRoutes from './routes/toolType';
 import { Role } from './models';
+import './lib/cron';
 
 dotenv.config();
 

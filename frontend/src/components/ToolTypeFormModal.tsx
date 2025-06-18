@@ -69,6 +69,7 @@ const ToolTypeFormModal = ({ onClose, onSuccess, toolType }: ToolTypeFormModalPr
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['tool-types'] });
+            queryClient.invalidateQueries({ queryKey: ['tools'] });
             toast.success(t(toolType ? 'toolTypeForm.updateSuccess' : 'toolTypeForm.createSuccess'));
             if (onSuccess) {
                 onSuccess(data.data);
