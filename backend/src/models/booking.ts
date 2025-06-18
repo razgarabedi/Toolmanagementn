@@ -10,6 +10,7 @@ interface BookingAttributes {
   startDate: Date;
   endDate: Date;
   status: 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'cancelled';
+  notes?: string;
   overdueNotified?: boolean;
 }
 
@@ -22,6 +23,7 @@ class Booking extends Model<BookingAttributes, BookingCreationAttributes> implem
   public startDate!: Date;
   public endDate!: Date;
   public status!: 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'cancelled';
+  public notes!: string;
   public overdueNotified!: boolean;
 
   public readonly createdAt!: Date;
@@ -68,6 +70,10 @@ Booking.init(
       type: DataTypes.ENUM('pending', 'approved', 'rejected', 'active', 'completed', 'cancelled'),
       allowNull: false,
       defaultValue: 'pending',
+    },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
     overdueNotified: {
       type: DataTypes.BOOLEAN,

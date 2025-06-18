@@ -7,7 +7,7 @@ import i18n from '../i18n';
 
 export const createBooking = async (req: AuthRequest, res: Response) => {
     try {
-        const { toolId, startDate, endDate, userId: providedUserId, status } = req.body;
+        const { toolId, startDate, endDate, userId: providedUserId, status, notes } = req.body;
         let userId = req.user.id;
 
         // Admins/Managers can specify a user
@@ -81,6 +81,7 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
             startDate: requestedStartDate,
             endDate: requestedEndDate,
             status: finalStatus,
+            notes,
         });
 
         // Fetch user for username
