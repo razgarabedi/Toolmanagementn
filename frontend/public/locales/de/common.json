@@ -130,11 +130,11 @@
         "bookedBy": "Gebucht von",
         "period": "Zeitraum",
         "bookedOn": "Gebucht am",
-        "notes": "Notizen",
         "approve": "Genehmigen",
         "reject": "Ablehnen",
         "cancel": "Stornieren",
-        "noBookingsFound": "Keine Buchungen mit den aktuellen Filtern gefunden."
+        "noBookingsFound": "Keine Buchungen mit den aktuellen Filtern gefunden.",
+        "notes": "Notizen"
     },
     "users": {
         "title": "Benutzer"
@@ -193,5 +193,26 @@
         "createSuccess": "Werkzeugtyp erfolgreich erstellt.",
         "updateSuccess": "Werkzeugtyp erfolgreich aktualisiert.",
         "error": "Fehler beim Speichern des Werkzeugtyps."
+    },
+    "checkout": {
+        "title": "Direkt-Checkout",
+        "user": "Benutzer",
+        "selectUser": "Wählen Sie einen Benutzer aus",
+        "returnDate": "Voraussichtliches Rückgabedatum",
+        "notes": "Notizen (optional)",
+        "notesPlaceholder": "Fügen Sie Notizen für diesen Checkout hinzu...",
+        "confirm": "Checkout bestätigen"
+    },
+    "bookingForm": {
+        "title": "Werkzeug buchen",
+        "user": "Benutzer",
+        "selectUser": "Wählen Sie einen Benutzer aus",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "notes": "Notizen (optional)",
+        "notesPlaceholder": "Fügen Sie Notizen für diese Buchung hinzu...",
+        "submit": "Buchung anfragen",
+        "success": "Buchungsanfrage erfolgreich übermittelt.",
+        "error": "Fehler beim Übermitteln der Buchungsanfrage."
     }
 }

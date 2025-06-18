@@ -14,7 +14,7 @@ import SafeImage from '@/components/SafeImage';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import ToolPreviewModal from '@/components/ToolPreviewModal';
 import BookingForm from '@/components/BookingForm';
-import UserSelectionModal from '@/components/UserSelectionModal';
+import CheckoutForm from '@/components/CheckoutForm';
 import useAuth from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 
@@ -50,12 +50,9 @@ const ToolsPage = () => {
     const [deletingInstance, setDeletingInstance] = useState<ToolInstance | null>(null);
     const [previewingInstance, setPreviewingInstance] = useState<ToolInstance | null>(null);
 
-    const [selectedToolId, setSelectedToolId] = useState<number | null>(null);
+    const [selectedTool, setSelectedTool] = useState<ToolInstance | null>(null);
     const [isBookingModalOpen, setBookingModalOpen] = useState(false);
-    const [isUserSelectModalOpen, setUserSelectModalOpen] = useState(false);
-    const [isCheckoutConfirmOpen, setCheckoutConfirmOpen] = useState(false);
-    const [actionType, setActionType] = useState<'book' | 'checkout' | null>(null);
-    const [targetUserId, setTargetUserId] = useState<number | undefined>(undefined);
+    const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
 
     const { data: tools, isLoading, isError } = useQuery<ToolInstance[]>({
         queryKey: ['tools'],
@@ -80,14 +77,15 @@ const ToolsPage = () => {
     });
 
     const checkoutMutation = useMutation({
-        mutationFn: (data: { toolId: number, userId?: number, endDate: Date }) => {
-            const { toolId, userId, endDate } = data;
+        mutationFn: (data: { toolId: number, userId?: number, endDate: Date, notes?: string }) => {
+            const { toolId, userId, endDate, notes } = data;
             return api.post('/bookings', {
                 toolId,
                 userId,
                 startDate: new Date(),
                 endDate,
-                status: 'active'
+                status: 'active',
+                notes
             });
         },
         onSuccess: (data, variables) => {
@@ -95,8 +93,8 @@ const ToolsPage = () => {
             queryClient.invalidateQueries({ queryKey: ['tool', variables.toolId] });
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             toast.success("Tool checked out successfully!");
-            setCheckoutConfirmOpen(false);
-            setSelectedToolId(null);
+            setCheckoutModalOpen(false);
+            setSelectedTool(null);
         },
         onError: (error: any) => toast.error(error.response?.data?.message || "Failed to checkout tool."),
     });
@@ -107,6 +105,11 @@ const ToolsPage = () => {
 
     const handleSearchChange = (id: number, value: string) => {
         setSearchTerms(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleEditInstance = (instance: ToolInstance) => {
+        setEditingInstance(instance);
+        setShowForm(true);
     };
 
     if (isLoading) return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
@@ -137,42 +140,20 @@ const ToolsPage = () => {
 
     const sortedToolTypes = Object.values(groupedTools).sort((a, b) => a.name.localeCompare(b.name));
 
-    const handleBookClick = (toolId: number) => {
-        setSelectedToolId(toolId);
-        if (user?.role === 'admin' || user?.role === 'manager') {
-          setActionType('book');
-          setUserSelectModalOpen(true);
-        } else {
-          setBookingModalOpen(true);
-        }
+    const handleBookClick = (tool: ToolInstance) => {
+        setSelectedTool(tool);
+        setBookingModalOpen(true);
     };
     
-    const handleCheckoutClick = (toolId: number) => {
-        setSelectedToolId(toolId);
-        if (user?.role === 'admin' || user?.role === 'manager') {
-          setActionType('checkout');
-          setUserSelectModalOpen(true);
-        } else {
-          setCheckoutConfirmOpen(true);
-        }
-    };
-
-    const handleUserSelected = (userId: number) => {
-        setUserSelectModalOpen(false);
-        setTargetUserId(userId);
-        if (actionType === 'book') {
-          setBookingModalOpen(true);
-        } else if (actionType === 'checkout') {
-          const endDate = new Date();
-          endDate.setDate(endDate.getDate() + 7); 
-          checkoutMutation.mutate({ toolId: selectedToolId!, userId, endDate });
-        }
+    const handleCheckoutClick = (tool: ToolInstance) => {
+        setSelectedTool(tool);
+        setCheckoutModalOpen(true);
     };
       
-    const handleConfirmCheckout = () => {
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 7);
-        checkoutMutation.mutate({ toolId: selectedToolId!, endDate });
+    const handleConfirmCheckout = (data: { userId?: number, endDate: Date, notes?: string }) => {
+        if (selectedTool) {
+            checkoutMutation.mutate({ toolId: selectedTool.id, ...data });
+        }
     };
 
     const handleCheckin = (instance: ToolInstance) => {
@@ -281,11 +262,11 @@ const ToolsPage = () => {
                                             <ToolInstanceCard
                                                 key={instance.id}
                                                 instance={instance}
-                                                onEdit={() => setEditingInstance(instance)}
+                                                onEdit={() => handleEditInstance(instance)}
                                                 onDelete={() => setDeletingInstance(instance)}
                                                 onPreview={() => setPreviewingInstance(instance)}
-                                                onBook={() => handleBookClick(instance.id)}
-                                                onCheckout={() => handleCheckoutClick(instance.id)}
+                                                onBook={() => handleBookClick(instance)}
+                                                onCheckout={() => handleCheckoutClick(instance)}
                                                 onCheckin={() => handleCheckin(instance)}
                                             />
                                         ))}
@@ -297,79 +278,60 @@ const ToolsPage = () => {
                 })}
             </div>
 
-            {(showForm || editingInstance) && (
+            {showForm && (
                 <ToolInstanceForm
                     instance={editingInstance}
-                    onFormSubmit={() => {
+                    onClose={() => {
                         setShowForm(false);
                         setEditingInstance(null);
                     }}
                 />
             )}
-
             {deletingInstance && (
                 <ConfirmationModal
-                    title={t('tools.deleteConfirmTitle')}
-                    message={t('tools.deleteConfirmMessage', { name: deletingInstance.serialNumber || deletingInstance.id })}
+                    isOpen={!!deletingInstance}
+                    onClose={() => setDeletingInstance(null)}
                     onConfirm={() => {
                         deleteMutation.mutate(deletingInstance.id);
                         setDeletingInstance(null);
                     }}
-                    onCancel={() => setDeletingInstance(null)}
+                    title={t('toolInstanceCard.deleteConfirmation.title')}
+                    message={t('toolInstanceCard.deleteConfirmation.message', { name: deletingInstance.name })}
                 />
             )}
-
-            {isBookingModalOpen && selectedToolId && (
-                <BookingForm 
-                toolId={selectedToolId}
-                userId={targetUserId}
-                onClose={() => {
-                    setBookingModalOpen(false);
-                    setTargetUserId(undefined);
-                }} 
-                onSuccess={() => {
-                    setBookingModalOpen(false);
-                    setTargetUserId(undefined);
-                    queryClient.invalidateQueries({ queryKey: ['tools'] });
-                    queryClient.invalidateQueries({ queryKey: ['bookings'] });
-                    if (selectedToolId) {
-                        queryClient.invalidateQueries({ queryKey: ['tool', selectedToolId] });
-                    }
-                }}
-                />
-            )}
-            {isUserSelectModalOpen && (
-                <UserSelectionModal 
-                onClose={() => setUserSelectModalOpen(false)}
-                onSelect={handleUserSelected}
-                />
-            )}
-            {isCheckoutConfirmOpen && (
-                <ConfirmationModal
-                    title="Confirm Checkout"
-                    message="Do you want to check out this tool for a default period of 7 days?"
-                    onConfirm={handleConfirmCheckout}
-                    onCancel={() => setCheckoutConfirmOpen(false)}
-                    confirmText="Checkout"
-                />
-            )}
-
             {previewingInstance && (
-                <ToolPreviewModal 
-                    tool={previewingInstance}
+                <ToolPreviewModal
+                    instance={previewingInstance}
                     onClose={() => setPreviewingInstance(null)}
                     onBook={() => {
-                        handleBookClick(previewingInstance.id);
                         setPreviewingInstance(null);
+                        handleBookClick(previewingInstance);
                     }}
                     onCheckout={() => {
-                        handleCheckoutClick(previewingInstance.id);
                         setPreviewingInstance(null);
+                        handleCheckoutClick(previewingInstance);
                     }}
-                    onCheckin={() => {
-                        handleCheckin(previewingInstance);
-                        setPreviewingInstance(null);
+                />
+            )}
+            {isBookingModalOpen && selectedTool && (
+                <BookingForm
+                    tool={selectedTool}
+                    onClose={() => {
+                        setBookingModalOpen(false);
+                        setSelectedTool(null);
                     }}
+                    isAdminOrManager={user?.role === 'admin' || user?.role === 'manager'}
+                />
+            )}
+            {isCheckoutModalOpen && selectedTool && (
+                <CheckoutForm
+                    tool={selectedTool}
+                    onClose={() => {
+                        setCheckoutModalOpen(false);
+                        setSelectedTool(null);
+                    }}
+                    onSubmit={handleConfirmCheckout}
+                    isAdminOrManager={user?.role === 'admin' || user?.role === 'manager'}
                 />
             )}
         </div>

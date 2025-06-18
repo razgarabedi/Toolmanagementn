@@ -158,5 +158,29 @@
         "createSuccess": "Tool type created successfully.",
         "updateSuccess": "Tool type updated successfully.",
         "error": "Error saving tool type."
+    },
+    "checkout": {
+        "title": "Direct Checkout",
+        "user": "User",
+        "selectUser": "Select a user",
+        "returnDate": "Expected Return Date",
+        "notes": "Notes (optional)",
+        "notesPlaceholder": "Add any notes for this checkout...",
+        "confirm": "Confirm Checkout"
+    },
+    "bookingForm": {
+        "title": "Book Tool",
+        "user": "User",
+        "selectUser": "Select a user",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "notes": "Notes (optional)",
+        "notesPlaceholder": "Add any notes for this booking...",
+        "submit": "Request Booking",
+        "success": "Booking request submitted successfully.",
+        "error": "Failed to submit booking request."
+    },
+    "bookings": {
+        "notes": "Notes"
     }
 } 

@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Spinner from './Spinner';
 import { X } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 interface User {
     id: number;
@@ -20,19 +19,18 @@ interface Tool {
     rfid?: string;
 }
 
-interface BookingFormProps {
+interface CheckoutFormProps {
     tool: Tool | null;
     onClose: () => void;
+    onSubmit: (data: { userId?: number; endDate: Date; notes?: string }) => void;
     isAdminOrManager: boolean;
 }
 
-const BookingForm = ({ tool, onClose, isAdminOrManager }: BookingFormProps) => {
+const CheckoutForm = ({ tool, onClose, onSubmit, isAdminOrManager }: CheckoutFormProps) => {
     const { t } = useTranslation('common');
-    const queryClient = useQueryClient();
-    const [startDate, setStartDate] = useState<Date>(new Date());
     const [endDate, setEndDate] = useState<Date>(() => {
         const date = new Date();
-        date.setDate(date.getDate() + 1);
+        date.setDate(date.getDate() + 7); // Default to 7 days from now
         return date;
     });
     const [notes, setNotes] = useState('');
@@ -41,22 +39,7 @@ const BookingForm = ({ tool, onClose, isAdminOrManager }: BookingFormProps) => {
     const { data: users, isLoading: usersLoading } = useQuery<User[]>({
         queryKey: ['users'],
         queryFn: () => api.get('/users').then(res => res.data),
-        enabled: isAdminOrManager,
-    });
-
-    const bookingMutation = useMutation({
-        mutationFn: (data: { toolId: number, userId?: number, startDate: Date, endDate: Date, notes?: string }) => {
-            return api.post('/bookings', { ...data, status: 'pending' });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['tools'] });
-            queryClient.invalidateQueries({ queryKey: ['bookings'] });
-            toast.success(t('bookingForm.success'));
-            onClose();
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || t('bookingForm.error'));
-        }
+        enabled: isAdminOrManager, // Only fetch users if admin/manager
     });
 
     useEffect(() => {
@@ -69,9 +52,7 @@ const BookingForm = ({ tool, onClose, isAdminOrManager }: BookingFormProps) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        bookingMutation.mutate({
-            toolId: tool.id,
-            startDate,
+        onSubmit({
             endDate,
             notes,
             userId: selectedUserId
@@ -84,13 +65,13 @@ const BookingForm = ({ tool, onClose, isAdminOrManager }: BookingFormProps) => {
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
                     <X size={24} />
                 </button>
-                <h2 className="text-2xl font-bold mb-4">{t('bookingForm.title')}</h2>
+                <h2 className="text-2xl font-bold mb-4">{t('checkout.title')}</h2>
                 <p className="mb-6 text-gray-600">{`${tool.name} (${tool.rfid || 'N/A'})`}</p>
 
                 <form onSubmit={handleSubmit}>
                     {isAdminOrManager && (
                         <div className="mb-4">
-                            <label htmlFor="user" className="block text-sm font-medium text-gray-700 mb-1">{t('bookingForm.user')}</label>
+                            <label htmlFor="user" className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.user')}</label>
                             {usersLoading ? <Spinner /> : (
                                 <select
                                     id="user"
@@ -99,7 +80,7 @@ const BookingForm = ({ tool, onClose, isAdminOrManager }: BookingFormProps) => {
                                     className="w-full p-2 border border-gray-300 rounded-md"
                                     required
                                 >
-                                    <option value="" disabled>{t('bookingForm.selectUser')}</option>
+                                    <option value="" disabled>{t('checkout.selectUser')}</option>
                                     {users?.map(user => (
                                         <option key={user.id} value={user.id}>
                                             {user.username} {user.department ? `(${user.department})` : ''}
@@ -109,46 +90,31 @@ const BookingForm = ({ tool, onClose, isAdminOrManager }: BookingFormProps) => {
                             )}
                         </div>
                     )}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">{t('bookingForm.startDate')}</label>
-                            <input
-                                type="date"
-                                id="startDate"
-                                value={startDate.toISOString().split('T')[0]}
-                                onChange={(e) => setStartDate(new Date(e.target.value))}
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">{t('bookingForm.endDate')}</label>
-                            <input
-                                type="date"
-                                id="endDate"
-                                value={endDate.toISOString().split('T')[0]}
-                                onChange={(e) => setEndDate(new Date(e.target.value))}
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                                required
-                            />
-                        </div>
+                    <div className="mb-4">
+                        <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.returnDate')}</label>
+                        <input
+                            type="date"
+                            id="endDate"
+                            value={endDate.toISOString().split('T')[0]}
+                            onChange={(e) => setEndDate(new Date(e.target.value))}
+                            className="w-full p-2 border border-gray-300 rounded-md"
+                            required
+                        />
                     </div>
                     <div className="mb-6">
-                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">{t('bookingForm.notes')}</label>
+                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.notes')}</label>
                         <textarea
                             id="notes"
                             rows={3}
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             className="w-full p-2 border border-gray-300 rounded-md"
-                            placeholder={t('bookingForm.notesPlaceholder')}
+                            placeholder={t('checkout.notesPlaceholder')}
                         />
                     </div>
                     <div className="flex justify-end gap-4">
                         <button type="button" onClick={onClose} className="text-gray-600 hover:text-gray-900">{t('common.cancel')}</button>
-                        <button type="submit" className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700" disabled={bookingMutation.isPending}>
-                            {bookingMutation.isPending ? <Spinner size="sm" /> : t('bookingForm.submit')}
-                        </button>
+                        <button type="submit" className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700">{t('checkout.confirm')}</button>
                     </div>
                 </form>
             </div>
@@ -156,4 +122,4 @@ const BookingForm = ({ tool, onClose, isAdminOrManager }: BookingFormProps) => {
     );
 };
 
-export default BookingForm; 
+export default CheckoutForm; 

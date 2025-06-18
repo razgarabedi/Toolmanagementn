@@ -25,6 +25,7 @@ interface Booking {
   endDate: string;
   createdAt: string;
   status: 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'cancelled';
+  notes?: string;
 }
 
 const BookingActions = ({ booking, t }: { booking: Booking, t: TFunction }) => {
@@ -109,6 +110,7 @@ const BookingCard = ({ booking, t }: { booking: Booking, t: TFunction }) => {
           <p><span className="font-semibold">{t('bookings.bookedBy')}:</span> {booking.user.username}</p>
           <p><span className="font-semibold">{t('bookings.period')}:</span> {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}</p>
           <p><span className="font-semibold">{t('bookings.bookedOn')}:</span> {new Date(booking.createdAt).toLocaleString()}</p>
+          {booking.notes && <p><span className="font-semibold">{t('bookings.notes')}:</span> {booking.notes}</p>}
         </div>
       </div>
       <BookingActions booking={booking} t={t} />
