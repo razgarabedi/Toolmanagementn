@@ -2,8 +2,10 @@
   "nav": {
     "brand": "Werkzeugverwaltung",
     "dashboard": "Dashboard",
+    "notifications": "Benachrichtigungen",
     "tools": "Werkzeugbestand",
     "bookings": "Buchungen",
+    "myBookings": "Meine Buchungen",
     "calendarView": "Kalenderansicht",
     "maintenance": "Wartung",
     "spareParts": "Ersatzteile",
@@ -251,17 +253,20 @@
     "category": "Kategorie",
     "manufacturer": "Hersteller",
     "status": "Status",
+    "selectStatus": "Status auswählen",
     "condition": "Zustand",
+    "selectCondition": "Zustand auswählen",
     "purchaseDate": "Kaufdatum",
-    "cost": "Kosten",
+    "lastMaintenanceDate": "Letztes Wartungsdatum",
     "location": "Standort",
-    "selectLocation": "Wählen Sie einen Standort",
+    "selectLocation": "Standort auswählen",
     "warrantyEndDate": "Garantieendedatum",
     "attachments": "Anhänge",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "saveAndNew": "Speichern & Neu",
     "createSuccess": "Werkzeuginstanz erfolgreich erstellt!",
+    "updateSuccess": "Werkzeuginstanz erfolgreich aktualisiert!",
     "error": "Ein Fehler ist aufgetreten"
   },
   "categoryForm": {
@@ -296,5 +301,16 @@
   "profile": {
     "title": "Benutzerprofil",
     "wip": "Diese Seite befindet sich im Aufbau."
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "none": "Sie haben keine ungelesenen Benachrichtigungen.",
+    "all": "Alle Benachrichtigungen anzeigen",
+    "bookingSubmitted": "Buchung für <toolName>{{toolName}}</toolName> von <startDate>{{startDate}}</startDate> bis <endDate>{{endDate}}</endDate>",
+    "toolCheckedOut": "<username>{{username}}</username> hat <toolName>{{toolName}}</toolName> bis zum <endDate>{{endDate}}</endDate> ausgeliehen",
+    "bookingApproved": "Buchung für <toolName>{{toolName}}</toolName> genehmigt",
+    "bookingRejected": "Buchung für <toolName>{{toolName}}</toolName> abgelehnt",
+    "bookingOverdue": "Buchung für <toolName>{{toolName}}</toolName> ist überfällig",
+    "toolCheckedIn": "<username>{{username}}</username> hat <toolName>{{toolName}}</toolName> zurückgegeben"
   }
 } 

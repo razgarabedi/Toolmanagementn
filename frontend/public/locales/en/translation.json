@@ -2,8 +2,10 @@
   "nav": {
     "brand": "Tool Management",
     "dashboard": "Dashboard",
+    "notifications": "Notifications",
     "tools": "Inventory",
     "bookings": "Bookings",
+    "myBookings": "My Bookings",
     "calendarView": "Calendar View",
     "maintenance": "Maintenance",
     "spareParts": "Spare Parts",
@@ -248,20 +250,21 @@
     "serialNumber": "Serial Number",
     "description": "Description",
     "instanceImage": "Instance Image",
-    "category": "Category",
-    "manufacturer": "Manufacturer",
     "status": "Status",
+    "selectStatus": "Select status",
     "condition": "Condition",
+    "selectCondition": "Select condition",
     "purchaseDate": "Purchase Date",
-    "cost": "Cost",
+    "lastMaintenanceDate": "Last Maintenance Date",
     "location": "Location",
-    "selectLocation": "Select a location",
+    "selectLocation": "Select location",
     "warrantyEndDate": "Warranty End Date",
     "attachments": "Attachments",
     "cancel": "Cancel",
     "save": "Save",
     "saveAndNew": "Save & New",
     "createSuccess": "Tool instance created successfully!",
+    "updateSuccess": "Tool instance updated successfully!",
     "error": "An error occurred"
   },
   "categoryForm": {
@@ -296,5 +299,16 @@
   "profile": {
     "title": "User Profile",
     "wip": "This page is a work in progress."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "none": "You have no unread notifications.",
+    "all": "View all notifications",
+    "bookingSubmitted": "Booking for <toolName>{{toolName}}</toolName> from <startDate>{{startDate}}</startDate> to <endDate>{{endDate}}</endDate>",
+    "toolCheckedOut": "<username>{{username}}</username> checked out <toolName>{{toolName}}</toolName> until <endDate>{{endDate}}</endDate>",
+    "bookingApproved": "Booking for <toolName>{{toolName}}</toolName> approved",
+    "bookingRejected": "Booking for <toolName>{{toolName}}</toolName> rejected",
+    "bookingOverdue": "Booking for <toolName>{{toolName}}</toolName> is overdue",
+    "toolCheckedIn": "<username>{{username}}</username> returned <toolName>{{toolName}}</toolName>"
   }
 } 

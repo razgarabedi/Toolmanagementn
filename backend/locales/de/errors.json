@@ -1,3 +1,9 @@
 {
-  "resourceInUse": "{{resource}} kann nicht gelöscht werden, da es noch in Gebrauch ist."
+  "resourceInUse": "{{resource}} kann nicht gelöscht werden, da es noch in Gebrauch ist.",
+  "bookingSubmitted": "Ihre Buchung für '{{toolName}}' von {{startDate}} bis {{endDate}} wurde zur Genehmigung eingereicht.",
+  "toolCheckedOut": "Sie haben '{{toolName}}' bis zum {{endDate}} ausgecheckt.",
+  "bookingApproved": "Ihre Buchung für '{{toolName}}' wurde genehmigt.",
+  "bookingRejected": "Ihre Buchung für '{{toolName}}' wurde abgelehnt.",
+  "bookingOverdue": "Ihre Buchung für '{{toolName}}' ist überfällig. Bitte geben Sie es so bald wie möglich zurück.",
+  "toolCheckedIn": "Sie haben '{{toolName}}' erfolgreich eingecheckt."
 } 

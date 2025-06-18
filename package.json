@@ -2,6 +2,7 @@
   "dependencies": {
     "@yudiel/react-qr-scanner": "^2.3.1",
     "bcryptjs": "^3.0.2",
-    "react-datepicker": "^8.4.0"
+    "react-datepicker": "^8.4.0",
+    "react-toastify": "^11.0.5"
   }
 }

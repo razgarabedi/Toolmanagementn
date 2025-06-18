@@ -23,6 +23,8 @@ import {
   Menu,
   X,
   User as UserIcon,
+  Bell,
+  BookCheck
 } from 'lucide-react';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -75,8 +77,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   const navLinks = [
     { href: '/dashboard', label: 'nav.dashboard', icon: LayoutDashboard, roles: ['user', 'manager', 'admin'] },
+    { href: '/notifications', label: 'nav.notifications', icon: Bell, roles: ['user', 'manager', 'admin'] },
     { href: '/tools', label: 'nav.tools', icon: Hammer, roles: ['user', 'manager', 'admin'] },
     { href: '/bookings', label: 'nav.bookings', icon: Book, roles: ['user', 'manager', 'admin'] },
+    { href: '/my-bookings', label: 'nav.myBookings', icon: BookCheck, roles: ['user', 'manager', 'admin'] },
     { href: '/calendar', label: 'nav.calendarView', icon: Calendar, roles: ['user', 'manager', 'admin'] },
     { href: '/maintenance', label: 'nav.maintenance', icon: Wrench, roles: ['manager', 'admin'] },
     { href: '/spare-parts', label: 'nav.spareParts', icon: Package, roles: ['manager', 'admin'] },

@@ -4,8 +4,10 @@ import sequelize from '../db';
 interface NotificationAttributes {
   id: number;
   userId: number;
-  message: string;
+  messageKey: string;
+  messagePayload: object;
   isRead: boolean;
+  toolId?: number;
 }
 
 interface NotificationCreationAttributes extends Optional<NotificationAttributes, 'id' | 'isRead'> {}
@@ -13,14 +15,17 @@ interface NotificationCreationAttributes extends Optional<NotificationAttributes
 export class Notification extends Model<NotificationAttributes, NotificationCreationAttributes> implements NotificationAttributes {
   public id!: number;
   public userId!: number;
-  public message!: string;
+  public messageKey!: string;
+  public messagePayload!: object;
   public isRead!: boolean;
+  public toolId?: number;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
   public static associate(models: any) {
     Notification.belongsTo(models.User, { as: 'user', foreignKey: 'userId' });
+    Notification.belongsTo(models.Tool, { as: 'tool', foreignKey: 'toolId' });
   }
 }
 
@@ -35,14 +40,26 @@ Notification.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    message: {
+    messageKey: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    messagePayload: {
+      type: DataTypes.JSON,
+      allowNull: true,
     },
     isRead: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       allowNull: false,
+    },
+    toolId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'tools',
+        key: 'id',
+      },
     }
   },
   {

@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { Booking, Notification } from '../models';
 import { Op } from 'sequelize';
+import i18n from '../i18n';
 
 // Schedule a job to run every day at midnight
 cron.schedule('0 0 * * *', async () => {
@@ -16,14 +17,22 @@ cron.schedule('0 0 * * *', async () => {
                     [Op.not]: true
                 }
             },
-            include: ['user']
+            include: ['user', 'tool']
         });
 
         for (const booking of overdueBookings) {
+            // @ts-ignore
+            const toolName = booking.tool ? booking.tool.name : `ID: ${booking.toolId}`;
             // Notify user
             await Notification.create({
                 userId: booking.userId,
-                message: `Your booking for tool #${booking.toolId} is overdue. Please return it as soon as possible.`
+                toolId: booking.toolId,
+                messageKey: 'bookingOverdue',
+                messagePayload: { 
+                    // @ts-ignore
+                    username: booking.user.username, 
+                    toolName
+                }
             });
 
             // Optionally, notify managers/admins

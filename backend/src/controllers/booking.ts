@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
-import { Booking, Tool, Notification, ToolType, Maintenance } from '../models';
+import { Booking, Tool, Notification, ToolType, Maintenance, Location, Manufacturer } from '../models';
 import { Op } from 'sequelize';
 import { AuthRequest } from '../middleware/auth';
 import { io } from '../index';
+import i18n from '../i18n';
 
 export const createBooking = async (req: AuthRequest, res: Response) => {
     try {
@@ -18,7 +19,14 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'Tool ID, start date, and end date are required.' });
         }
 
-        const tool = await Tool.findByPk(toolId);
+        // Fetch tool with associations
+        const tool = await Tool.findByPk(toolId, {
+            include: [
+                { model: ToolType, as: 'toolType' },
+                { model: Location, as: 'location' },
+                { model: Manufacturer, as: 'manufacturer' }
+            ]
+        });
         if (!tool) {
             return res.status(404).json({ message: 'Tool not found' });
         }
@@ -75,17 +83,56 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
             status: finalStatus,
         });
 
-        let notificationMessage = `Your booking for tool #${toolId} from ${requestedStartDate.toLocaleDateString()} to ${requestedEndDate.toLocaleDateString()} has been submitted for approval.`;
+        // Fetch user for username
+        const user = await (await import('../models/user')).default.findByPk(userId);
+
+        // Determine language (default to 'en', can be extended to get from user profile)
+        const lang = req.headers['accept-language']?.split(',')[0] || 'en';
+        
+        let messageKey = 'bookingSubmitted';
+        let messagePayload:object = {
+            toolName: tool.name,
+            serialNumber: tool.serialNumber,
+            rfid: tool.rfid,
+            toolType: (tool as any).toolType?.name,
+            location: (tool as any).location?.name,
+            manufacturer: (tool as any).manufacturer?.name,
+            username: user?.username,
+            startDate: requestedStartDate.toLocaleDateString(lang),
+            endDate: requestedEndDate.toLocaleDateString(lang)
+        };
+
         if (finalStatus === 'active') {
-            notificationMessage = `You have checked out tool #${toolId} until ${requestedEndDate.toLocaleDateString()}.`;
+            messageKey = 'toolCheckedOut';
+            messagePayload = {
+                toolName: tool.name,
+                serialNumber: tool.serialNumber,
+                rfid: tool.rfid,
+                toolType: (tool as any).toolType?.name,
+                location: (tool as any).location?.name,
+                manufacturer: (tool as any).manufacturer?.name,
+                username: user?.username,
+                endDate: requestedEndDate.toLocaleDateString(lang)
+            };
         } else if (finalStatus === 'approved') {
-            notificationMessage = `Your booking for tool #${toolId} has been approved.`;
+            messageKey = 'bookingApproved';
+            messagePayload = {
+                toolName: tool.name,
+                serialNumber: tool.serialNumber,
+                rfid: tool.rfid,
+                toolType: (tool as any).toolType?.name,
+                location: (tool as any).location?.name,
+                manufacturer: (tool as any).manufacturer?.name,
+                username: user?.username
+            };
         }
 
         // Create a notification for the user
         const notification = await Notification.create({
             userId,
-            message: notificationMessage,
+            toolId,
+            messageKey,
+            messagePayload
         });
         // Emit notification event to the user
         io.to(`user_${userId}`).emit('notification', notification);
@@ -218,59 +265,98 @@ export const getMyBookings = async (req: Request, res: Response) => {
 export const checkOutTool = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const booking = await Booking.findByPk(id);
+        const booking = await Booking.findByPk(id, { include: ['tool', 'user'] });
 
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        if (booking.userId !== req.user.id && !['admin', 'manager'].includes(req.user.role)) {
-            return res.status(403).json({ message: 'Not authorized' });
-        }
-
         if (booking.status !== 'approved') {
-            return res.status(400).json({ message: 'Tool can only be checked out if the booking is approved.' });
-        }
-
-        const now = new Date();
-        if (new Date(booking.startDate) > now) {
-            return res.status(400).json({ message: 'Cannot check out a tool before the booking start date.' });
+            return res.status(400).json({ message: 'Only approved bookings can be checked out.' });
         }
 
         booking.status = 'active';
         await booking.save();
 
+        // Fetch tool with associations
+        const tool = await Tool.findByPk(booking.toolId, {
+            include: [
+                { model: ToolType, as: 'toolType' },
+                { model: Location, as: 'location' },
+                { model: Manufacturer, as: 'manufacturer' }
+            ]
+        });
+        const user = (booking as any).user;
+        const lang = req.headers['accept-language']?.split(',')[0] || 'en';
+        const notification = await Notification.create({
+            userId: booking.userId,
+            toolId: booking.toolId,
+            messageKey: 'toolCheckedOut',
+            messagePayload: {
+                toolName: tool?.name,
+                serialNumber: tool?.serialNumber,
+                rfid: tool?.rfid,
+                toolType: (tool as any)?.toolType?.name,
+                location: (tool as any)?.location?.name,
+                manufacturer: (tool as any)?.manufacturer?.name,
+                username: user?.username,
+                endDate: booking.endDate.toLocaleDateString(lang)
+            }
+        });
+        io.to(`user_${booking.userId}`).emit('notification', notification);
+
         res.status(200).json(booking);
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-};
+}
 
 export const checkInTool = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const booking = await Booking.findByPk(id);
-
+        const booking = await Booking.findByPk(id, { include: ['tool', 'user'] });
+        
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
-        
-        if (booking.userId !== req.user.id && !['admin', 'manager'].includes(req.user.role)) {
-            return res.status(403).json({ message: 'Not authorized' });
-        }
 
         if (booking.status !== 'active') {
-            return res.status(400).json({ message: 'Tool can only be checked in if it is active.' });
+            return res.status(400).json({ message: 'Only active bookings can be checked in.' });
         }
 
         booking.status = 'completed';
         await booking.save();
-        
+
+        // Fetch tool with associations
+        const tool = await Tool.findByPk(booking.toolId, {
+            include: [
+                { model: ToolType, as: 'toolType' },
+                { model: Location, as: 'location' },
+                { model: Manufacturer, as: 'manufacturer' }
+            ]
+        });
+        const user = (booking as any).user;
+        const notification = await Notification.create({
+            userId: booking.userId,
+            toolId: booking.toolId,
+            messageKey: 'toolCheckedIn',
+            messagePayload: {
+                toolName: tool?.name,
+                serialNumber: tool?.serialNumber,
+                rfid: tool?.rfid,
+                toolType: (tool as any)?.toolType?.name,
+                location: (tool as any)?.location?.name,
+                manufacturer: (tool as any)?.manufacturer?.name,
+                username: user?.username
+            }
+        });
+        io.to(`user_${booking.userId}`).emit('notification', notification);
+
         res.status(200).json(booking);
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-};
+}
 
 export const approveBooking = async (req: AuthRequest, res: Response) => {
     try {
@@ -285,11 +371,48 @@ export const approveBooking = async (req: AuthRequest, res: Response) => {
         booking.status = 'approved';
         await booking.save();
 
+        // Fetch user for username
+        const user = await (await import('../models/user')).default.findByPk(booking.userId);
+        // Fetch tool with associations
+        const tool = await Tool.findByPk(booking.toolId, {
+            include: [
+                { model: ToolType, as: 'toolType' },
+                { model: Location, as: 'location' },
+                { model: Manufacturer, as: 'manufacturer' }
+            ]
+        });
+
         await Notification.create({
             userId: booking.userId,
-            message: `Your booking for tool #${booking.toolId} has been approved.`
+            toolId: booking.toolId,
+            messageKey: 'bookingApproved',
+            messagePayload: {
+                toolName: tool?.name,
+                serialNumber: tool?.serialNumber,
+                rfid: tool?.rfid,
+                toolType: (tool as any)?.toolType?.name,
+                location: (tool as any)?.location?.name,
+                manufacturer: (tool as any)?.manufacturer?.name,
+                username: user?.username
+            }
         });
-        io.to(`user_${booking.userId}`).emit('notification', { userId: booking.userId, message: `Your booking for tool #${booking.toolId} has been approved.` });
+
+        const notificationData = {
+            userId: booking.userId,
+            messageKey: 'bookingApproved',
+            messagePayload: {
+                toolName: tool?.name,
+                serialNumber: tool?.serialNumber,
+                rfid: tool?.rfid,
+                toolType: (tool as any)?.toolType?.name,
+                location: (tool as any)?.location?.name,
+                manufacturer: (tool as any)?.manufacturer?.name,
+                username: user?.username
+            },
+            isRead: false,
+            createdAt: new Date()
+        }
+        io.to(`user_${booking.userId}`).emit('notification', notificationData);
 
         res.status(200).json(booking);
     } catch (error) {
@@ -310,11 +433,48 @@ export const rejectBooking = async (req: AuthRequest, res: Response) => {
         booking.status = 'rejected';
         await booking.save();
 
+        // Fetch user for username
+        const user = await (await import('../models/user')).default.findByPk(booking.userId);
+        // Fetch tool with associations
+        const tool = await Tool.findByPk(booking.toolId, {
+            include: [
+                { model: ToolType, as: 'toolType' },
+                { model: Location, as: 'location' },
+                { model: Manufacturer, as: 'manufacturer' }
+            ]
+        });
+
         await Notification.create({
             userId: booking.userId,
-            message: `Your booking for tool #${booking.toolId} has been rejected.`
+            toolId: booking.toolId,
+            messageKey: 'bookingRejected',
+            messagePayload: {
+                toolName: tool?.name,
+                serialNumber: tool?.serialNumber,
+                rfid: tool?.rfid,
+                toolType: (tool as any)?.toolType?.name,
+                location: (tool as any)?.location?.name,
+                manufacturer: (tool as any)?.manufacturer?.name,
+                username: user?.username
+            }
         });
-        io.to(`user_${booking.userId}`).emit('notification', { userId: booking.userId, message: `Your booking for tool #${booking.toolId} has been rejected.` });
+
+        const notificationData = {
+            userId: booking.userId,
+            messageKey: 'bookingRejected',
+            messagePayload: {
+                toolName: tool?.name,
+                serialNumber: tool?.serialNumber,
+                rfid: tool?.rfid,
+                toolType: (tool as any)?.toolType?.name,
+                location: (tool as any)?.location?.name,
+                manufacturer: (tool as any)?.manufacturer?.name,
+                username: user?.username
+            },
+            isRead: false,
+            createdAt: new Date()
+        };
+        io.to(`user_${booking.userId}`).emit('notification', notificationData);
 
         res.status(200).json(booking);
     } catch (error) {
