@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Booking, Tool, Notification, ToolType, Maintenance } from '../models';
 import { Op } from 'sequelize';
 import { AuthRequest } from '../middleware/auth';
+import { io } from '../index';
 
 export const createBooking = async (req: AuthRequest, res: Response) => {
     try {
@@ -82,10 +83,12 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
         }
 
         // Create a notification for the user
-        await Notification.create({
+        const notification = await Notification.create({
             userId,
             message: notificationMessage,
         });
+        // Emit notification event to the user
+        io.to(`user_${userId}`).emit('notification', notification);
 
         res.status(201).json(booking);
     } catch (error) {
@@ -286,6 +289,7 @@ export const approveBooking = async (req: AuthRequest, res: Response) => {
             userId: booking.userId,
             message: `Your booking for tool #${booking.toolId} has been approved.`
         });
+        io.to(`user_${booking.userId}`).emit('notification', { userId: booking.userId, message: `Your booking for tool #${booking.toolId} has been approved.` });
 
         res.status(200).json(booking);
     } catch (error) {
@@ -310,6 +314,7 @@ export const rejectBooking = async (req: AuthRequest, res: Response) => {
             userId: booking.userId,
             message: `Your booking for tool #${booking.toolId} has been rejected.`
         });
+        io.to(`user_${booking.userId}`).emit('notification', { userId: booking.userId, message: `Your booking for tool #${booking.toolId} has been rejected.` });
 
         res.status(200).json(booking);
     } catch (error) {

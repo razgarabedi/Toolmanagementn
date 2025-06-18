@@ -39,6 +39,7 @@ const BookingForm = ({ toolId, userId, onClose, onSuccess }: BookingFormProps) =
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tool-bookings', toolId] });
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
             toast.success('Tool booked successfully!');
             onSuccess();
         },

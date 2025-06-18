@@ -57,6 +57,7 @@ const ToolList = ({ onEdit }: { onEdit: (tool: Tool) => void }) => {
       mutationFn: (bookingId: number) => api.put(`/bookings/${bookingId}/checkin`),
       onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['tools']});
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
           toast.success("Tool checked in successfully!");
       },
       onError: (error: any) => toast.error(error.response?.data?.message || "Failed to check in tool."),
@@ -75,6 +76,7 @@ const ToolList = ({ onEdit }: { onEdit: (tool: Tool) => void }) => {
       },
       onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['tools']});
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
           toast.success("Tool checked out successfully!");
           setCheckoutConfirmOpen(false);
           setSelectedToolId(null);
@@ -148,6 +150,7 @@ const ToolList = ({ onEdit }: { onEdit: (tool: Tool) => void }) => {
             setBookingModalOpen(false);
             setTargetUserId(undefined);
             queryClient.invalidateQueries({ queryKey: ['tools'] });
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
           }}
         />
       )}
@@ -159,7 +162,6 @@ const ToolList = ({ onEdit }: { onEdit: (tool: Tool) => void }) => {
       )}
       {isCheckoutConfirmOpen && (
           <ConfirmationModal
-              isOpen={isCheckoutConfirmOpen}
               title="Confirm Checkout"
               message="Do you want to check out this tool for a default period of 7 days?"
               onConfirm={handleConfirmCheckout}

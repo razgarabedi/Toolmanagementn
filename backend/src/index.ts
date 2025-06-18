@@ -19,11 +19,25 @@ import manufacturerRoutes from './routes/manufacturer';
 import toolTypeRoutes from './routes/toolType';
 import { Role } from './models';
 import './lib/cron';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3001;
+
+// Create HTTP server and attach Socket.io
+const server = http.createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+    credentials: true,
+  },
+});
+
+// Make io available for other modules
+export { io };
 
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -59,9 +73,18 @@ app.get('/api/roles', async (req, res) => {
     }
 });
 
+io.on('connection', (socket) => {
+  // Expect the client to send their userId after connecting
+  socket.on('join', (userId) => {
+    if (userId) {
+      socket.join(`user_${userId}`);
+    }
+  });
+});
+
 sequelize.sync().then(() => {
   console.log('Database synced');
-  app.listen(port, () => {
+  server.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
 }).catch((err) => {
