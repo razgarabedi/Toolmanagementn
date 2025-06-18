@@ -59,16 +59,25 @@ const NotificationsPage = () => {
             toolName: notification.tool?.name || notification.tool?.toolType?.name || messagePayload.toolName,
         };
         return (
-            <Trans
-                i18nKey={`notifications.${messageKey}`}
-                values={payload}
-                components={{
-                    username: <span className="text-green-600 font-bold" />,
-                    toolName: <span className="text-purple-600 font-bold" />,
-                    startDate: <span className="text-blue-600 font-bold" />,
-                    endDate: <span className="text-blue-600 font-bold" />
-                }}
-            />
+            <div>
+                <div>
+                    <Trans
+                        i18nKey={`notifications.${messageKey}`}
+                        values={payload}
+                        components={{
+                            username: <span className="text-green-600 font-bold" />,
+                            toolName: <span className="text-purple-600 font-bold" />,
+                            startDate: <span className="text-blue-600 font-bold" />,
+                            endDate: <span className="text-blue-600 font-bold" />
+                        }}
+                    />
+                </div>
+                {notification.tool?.location && (
+                    <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        {t('common:location')}: <span className="font-medium">{notification.tool.location.name}</span>
+                    </div>
+                )}
+            </div>
         )
     }
 
@@ -105,10 +114,10 @@ const NotificationsPage = () => {
                                 onClick={() => handleNotificationClick(notification)}
                                 className={`p-4 border rounded-lg cursor-pointer transition-colors ${notification.isRead ? 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600'}`}
                             >
-                                <p className={notification.isRead ? 'text-gray-500 dark:text-gray-400' : ''}>
+                                <div className={`space-y-1 ${notification.isRead ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                                     {renderMessage(notification)}
-                                </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                </div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                                     {moment(notification.createdAt).locale(i18n.language).format('LLL')}
                                 </p>
                             </div>
