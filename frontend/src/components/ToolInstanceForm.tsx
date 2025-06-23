@@ -62,7 +62,10 @@ interface ToolInstance {
     description?: string;
 }
 
-const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance | null, onFormSubmit: () => void }) => {
+const ToolInstanceForm = ({ instance, onClose }: { 
+    instance?: ToolInstance | null, 
+    onClose: () => void 
+}) => {
     const { t } = useTranslation('common');
     const queryClient = useQueryClient();
     const [isToolTypeModalOpen, setIsToolTypeModalOpen] = useState(false);
@@ -232,7 +235,7 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
             toast.success(t(instance ? 'toolInstanceForm.updateSuccess' : 'toolInstanceForm.createSuccess'));
 
             if (closeOnSubmit) {
-                onFormSubmit();
+                onClose();
             } else {
                 setFormData({
                     toolTypeId: '', name: '', rfid: '', serialNumber: '', description: '',
@@ -282,14 +285,14 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onFormSubmit();
+                onClose();
             }
         };
         window.addEventListener('keydown', handleEsc);
         return () => {
             window.removeEventListener('keydown', handleEsc);
         };
-    }, [onFormSubmit]);
+    }, [onClose]);
 
     const getInputClassName = (fieldName: string) => {
         return `mt-1 block w-full p-2 border rounded-md shadow-sm ${
@@ -298,16 +301,16 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
     };
 
     return (
-        <div className="fixed inset-0 custom-backdrop-blur flex justify-center items-center z-50" onClick={onFormSubmit}>
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto flex flex-col animate-slide-up" onClick={(e) => e.stopPropagation()}>
-                <div className="p-4 border-b flex justify-between items-center">
-                    <h2 className="text-xl font-bold">{instance && instance.id ? t('toolInstanceForm.editTitle') : t('toolInstanceForm.addTitle')}</h2>
-                    <button onClick={onFormSubmit} className="text-gray-500 hover:text-gray-800">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-50 animate-fade-in">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col animate-slide-up-fast" role="dialog" aria-modal="true">
+                <div className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg">
+                    <h2 className="text-xl font-semibold">{t(instance ? 'toolInstanceForm.editTitle' : 'toolInstanceForm.createTitle')}</h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
                         <X size={24} />
                     </button>
                 </div>
-                <div className="p-6">
-                    <form onSubmit={(e) => handleSubmit(e)} className="space-y-6">
+                <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto">
+                    <div className="p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Werkzeugtyp */}
                             <div className="col-span-2">
@@ -434,27 +437,30 @@ const ToolInstanceForm = ({ instance, onFormSubmit }: { instance?: ToolInstance 
                                 <input type="file" name="attachments" multiple onChange={handleFileChange} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
                             </div>
                         </div>
-                        
-                        <div className="flex justify-end space-x-4 pt-4 border-t">
-                            <button type="button" onClick={onFormSubmit} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
-                                {t('toolInstanceForm.cancel')}
+                    </div>
+                </form>
+                <div className="flex justify-between items-center p-4 border-t bg-gray-50 rounded-b-lg">
+                    <div>
+                        {mutation.isError && (
+                            <div className="flex items-center text-red-600">
+                                <AlertCircle size={20} className="mr-2" />
+                                <span>{mutation.error?.response?.data?.message || t('toolInstanceForm.genericError')}</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <button type="button" onClick={onClose} className="text-gray-700 font-semibold py-2 px-4 rounded-md hover:bg-gray-100">
+                            {t('common.cancel')}
+                        </button>
+                        {!instance && (
+                            <button type="button" onClick={handleSaveAndNew} className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-300 flex items-center gap-2" disabled={mutation.isPending}>
+                                {mutation.isPending ? <Spinner size="sm" /> : t('toolInstanceForm.saveAndNew')}
                             </button>
-                            {instance && instance.id ? (
-                                <button type="submit" className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors" disabled={mutation.isPending}>
-                                    {mutation.isPending ? <Spinner /> : t('toolInstanceForm.save')}
-                                </button>
-                            ) : (
-                                <>
-                                    <button type="button" onClick={handleSaveAndNew} className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors" disabled={mutation.isPending}>
-                                        {mutation.isPending ? <Spinner /> : t('toolInstanceForm.saveAndNew')}
-                                    </button>
-                                    <button type="submit" className="px-6 py-2 bg-purple-800 text-white rounded-md hover:bg-purple-900 transition-colors" disabled={mutation.isPending}>
-                                        {mutation.isPending ? <Spinner /> : t('toolInstanceForm.add')}
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </form>
+                        )}
+                        <button type="button" onClick={() => submitForm(true)} className="bg-purple-600 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-700 flex items-center gap-2" disabled={mutation.isPending}>
+                            {mutation.isPending ? <Spinner size="sm" /> : t(instance ? 'toolInstanceForm.updateButton' : 'toolInstanceForm.createButton')}
+                        </button>
+                    </div>
                 </div>
             </div>
 

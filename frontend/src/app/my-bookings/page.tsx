@@ -4,26 +4,34 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Spinner from '@/components/Spinner';
 import useAuth from '@/hooks/useAuth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import CheckinForm from '@/components/CheckinForm';
+
+interface Tool {
+    id: number;
+    name: string;
+    rfid?: string;
+    condition: Condition;
+}
 
 interface Booking {
     id: number;
     startDate: string;
     endDate: string;
     status: string;
-    tool: {
-        id: number;
-        name: string;
-    };
+    tool: Tool;
 }
+type Condition = 'new' | 'good' | 'fair' | 'poor';
 
 const MyBookingsPage = () => {
     const { isAuthenticated, loading: authLoading } = useAuth();
     const router = useRouter();
     const queryClient = useQueryClient();
+    const [isCheckinModalOpen, setCheckinModalOpen] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
     const { data: bookings, isLoading, isError, error } = useQuery<Booking[]>({
         queryKey: ['my-bookings'],
@@ -56,10 +64,13 @@ const MyBookingsPage = () => {
     });
 
     const checkInMutation = useMutation({
-        mutationFn: (bookingId: number) => api.put(`/bookings/${bookingId}/checkin`),
+        mutationFn: (data: { bookingId: number, condition: Condition, notes?: string }) => 
+            api.put(`/bookings/${data.bookingId}/checkin`, { condition: data.condition, notes: data.notes }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
             toast.success('Tool checked in successfully!');
+            setCheckinModalOpen(false);
+            setSelectedBooking(null);
         },
         onError: (error: { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to check in tool.');
@@ -71,6 +82,17 @@ const MyBookingsPage = () => {
             router.push('/login');
         }
     }, [isAuthenticated, authLoading, router]);
+
+    const handleCheckinClick = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setCheckinModalOpen(true);
+    };
+
+    const handleCheckinSubmit = (data: { condition: Condition; notes?: string }) => {
+        if (selectedBooking) {
+            checkInMutation.mutate({ bookingId: selectedBooking.id, ...data });
+        }
+    };
 
     if (isLoading || authLoading) {
         return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
@@ -127,7 +149,7 @@ const MyBookingsPage = () => {
                                         )}
                                         {booking.status === 'active' && (
                                             <button
-                                                onClick={() => checkInMutation.mutate(booking.id)}
+                                                onClick={() => handleCheckinClick(booking)}
                                                 className="bg-blue-500 text-white px-2 py-1 rounded"
                                                 disabled={checkInMutation.isPending}
                                             >
@@ -143,6 +165,14 @@ const MyBookingsPage = () => {
                     <p>You have no bookings.</p>
                 )}
             </div>
+            {isCheckinModalOpen && selectedBooking && (
+                <CheckinForm
+                    tool={selectedBooking.tool}
+                    booking={selectedBooking}
+                    onClose={() => setCheckinModalOpen(false)}
+                    onSubmit={handleCheckinSubmit}
+                />
+            )}
         </div>
     );
 };

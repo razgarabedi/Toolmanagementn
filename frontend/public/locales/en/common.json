@@ -182,5 +182,16 @@
     },
     "bookings": {
         "notes": "Notes"
+    },
+    "checkinForm": {
+        "title": "Check-in for {{toolName}}",
+        "returnCondition": "Condition upon return",
+        "notesLabel": "Notes (optional)",
+        "cancelButton": "Cancel",
+        "confirmButton": "Confirm Check-in",
+        "condition_new": "New",
+        "condition_good": "Good",
+        "condition_fair": "Fair",
+        "condition_poor": "Poor"
     }
 } 

@@ -145,4 +145,17 @@ export const getMissingToolsReport = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong' });
     }
-} 
+}
+
+export const getBookingReport = async (req: Request, res: Response) => {
+    try {
+        const bookings = await Booking.findAll({
+            include: ['tool', 'user'],
+            order: [['createdAt', 'DESC']]
+        });
+        res.status(200).json(bookings);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+}; 

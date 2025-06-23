@@ -12,6 +12,8 @@ interface BookingAttributes {
   status: 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'cancelled';
   notes?: string;
   overdueNotified?: boolean;
+  checkinNotes?: string;
+  conditionOnReturn?: 'new' | 'good' | 'fair' | 'poor';
 }
 
 interface BookingCreationAttributes extends Optional<BookingAttributes, 'id'> {}
@@ -25,6 +27,8 @@ class Booking extends Model<BookingAttributes, BookingCreationAttributes> implem
   public status!: 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'cancelled';
   public notes!: string;
   public overdueNotified!: boolean;
+  public checkinNotes?: string;
+  public conditionOnReturn?: 'new' | 'good' | 'fair' | 'poor';
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -79,7 +83,15 @@ Booking.init(
       type: DataTypes.BOOLEAN,
       allowNull: true,
       defaultValue: false
-    }
+    },
+    checkinNotes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    conditionOnReturn: {
+      type: DataTypes.ENUM('new', 'good', 'fair', 'poor'),
+      allowNull: true,
+    },
   },
   {
     tableName: 'bookings',

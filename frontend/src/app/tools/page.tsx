@@ -15,6 +15,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import ToolPreviewModal from '@/components/ToolPreviewModal';
 import BookingForm from '@/components/BookingForm';
 import CheckoutForm from '@/components/CheckoutForm';
+import CheckinForm from '@/components/CheckinForm';
 import useAuth from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 
@@ -39,6 +40,8 @@ interface ToolInstance {
     activeBooking?: { id: number };
 }
 
+type Condition = 'new' | 'good' | 'fair' | 'poor';
+
 const ToolsPage = () => {
     const { t } = useTranslation('common');
     const { user } = useAuth();
@@ -53,6 +56,7 @@ const ToolsPage = () => {
     const [selectedTool, setSelectedTool] = useState<ToolInstance | null>(null);
     const [isBookingModalOpen, setBookingModalOpen] = useState(false);
     const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
+    const [isCheckinModalOpen, setCheckinModalOpen] = useState(false);
 
     const { data: tools, isLoading, isError } = useQuery<ToolInstance[]>({
         queryKey: ['tools'],
@@ -67,11 +71,14 @@ const ToolsPage = () => {
     });
 
     const checkinMutation = useMutation({
-        mutationFn: (data: { bookingId: number, toolId: number }) => api.put(`/bookings/${data.bookingId}/checkin`),
+        mutationFn: (data: { bookingId: number, toolId: number, condition: Condition, notes?: string }) => 
+            api.put(`/bookings/${data.bookingId}/checkin`, { condition: data.condition, notes: data.notes }),
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['tools']});
             queryClient.invalidateQueries({ queryKey: ['tool', variables.toolId] });
             toast.success("Tool checked in successfully!");
+            setCheckinModalOpen(false);
+            setSelectedTool(null);
         },
         onError: (error: any) => toast.error(error.response?.data?.message || "Failed to check in tool."),
     });
@@ -156,13 +163,22 @@ const ToolsPage = () => {
         }
     };
 
-    const handleCheckin = (instance: ToolInstance) => {
-        if(instance.activeBooking) {
-            checkinMutation.mutate({ bookingId: instance.activeBooking.id, toolId: instance.id });
+    const handleCheckinClick = (instance: ToolInstance) => {
+        setSelectedTool(instance);
+        setCheckinModalOpen(true);
+    };
+
+    const handleConfirmCheckin = (data: { condition: Condition; notes?: string }) => {
+        if (selectedTool && selectedTool.activeBooking) {
+            checkinMutation.mutate({ 
+                bookingId: selectedTool.activeBooking.id, 
+                toolId: selectedTool.id,
+                ...data 
+            });
         } else {
             toast.error("No active booking found for this tool.");
         }
-    }
+    };
 
     return (
         <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
@@ -267,7 +283,9 @@ const ToolsPage = () => {
                                                 onPreview={() => setPreviewingInstance(instance)}
                                                 onBook={() => handleBookClick(instance)}
                                                 onCheckout={() => handleCheckoutClick(instance)}
-                                                onCheckin={() => handleCheckin(instance)}
+                                                onCheckin={() => handleCheckinClick(instance)}
+                                                canManage={user?.role === 'admin' || user?.role === 'manager'}
+                                                canBook={user?.role !== 'admin' && user?.role !== 'manager'}
                                             />
                                         ))}
                                     </div>
@@ -301,15 +319,22 @@ const ToolsPage = () => {
             )}
             {previewingInstance && (
                 <ToolPreviewModal
-                    instance={previewingInstance}
+                    tool={previewingInstance}
                     onClose={() => setPreviewingInstance(null)}
                     onBook={() => {
+                        if (!previewingInstance) return;
                         setPreviewingInstance(null);
                         handleBookClick(previewingInstance);
                     }}
                     onCheckout={() => {
+                        if (!previewingInstance) return;
                         setPreviewingInstance(null);
                         handleCheckoutClick(previewingInstance);
+                    }}
+                    onCheckin={() => {
+                        if (!previewingInstance) return;
+                        handleCheckinClick(previewingInstance);
+                        setPreviewingInstance(null);
                     }}
                 />
             )}
@@ -332,6 +357,14 @@ const ToolsPage = () => {
                     }}
                     onSubmit={handleConfirmCheckout}
                     isAdminOrManager={user?.role === 'admin' || user?.role === 'manager'}
+                />
+            )}
+            {isCheckinModalOpen && selectedTool && selectedTool.activeBooking && (
+                <CheckinForm
+                    tool={selectedTool}
+                    booking={selectedTool.activeBooking}
+                    onClose={() => setCheckinModalOpen(false)}
+                    onSubmit={handleConfirmCheckin}
                 />
             )}
         </div>

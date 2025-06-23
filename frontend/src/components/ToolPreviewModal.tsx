@@ -12,9 +12,9 @@ import { getImageUrl } from '@/lib/utils';
 interface ToolPreviewModalProps {
     tool: any;
     onClose: () => void;
-    onBook: () => void;
-    onCheckout: () => void;
-    onCheckin: () => void;
+    onBook: (tool: any) => void;
+    onCheckout: (tool: any) => void;
+    onCheckin: (tool: any) => void;
 }
 
 const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: ToolPreviewModalProps) => {
@@ -23,8 +23,9 @@ const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: Tool
     const queryClient = useQueryClient();
 
     const { data: toolDetails, isLoading, isError } = useQuery({
-        queryKey: ['tool', tool.id],
+        queryKey: ['tool', tool?.id],
         queryFn: () => api.get(`/tools/${tool.id}`).then(res => res.data),
+        enabled: !!tool,
         initialData: tool,
     });
 
@@ -39,6 +40,10 @@ const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: Tool
             window.removeEventListener('keydown', handleEsc);
         };
     }, [onClose]);
+
+    if (!tool) {
+        return null;
+    }
 
     const renderContent = () => {
         if (isLoading || !i18n.isInitialized) {
@@ -125,17 +130,17 @@ const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: Tool
                 <div className="mt-8 pt-6 border-t border-gray-200 flex flex-wrap gap-4">
                      {toolDetails.status === 'available' ? (
                         <>
-                            <button onClick={onCheckout} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-purple-600 text-white`}>
+                            <button onClick={() => onCheckout(toolDetails)} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-purple-600 text-white`}>
                                 <CheckCircle size={16} />
                                 <span>{t('tool.directCheckout')}</span>
                             </button>
-                            <button onClick={onBook} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-white border border-gray-300`}>
+                            <button onClick={() => onBook(toolDetails)} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-white border border-gray-300`}>
                                 <Bookmark size={16} />
                                 <span>{t('tool.requestBooking')}</span>
                             </button>
                         </>
                     ) : toolDetails.status === 'in_use' ? (
-                        <button onClick={onCheckin} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-yellow-500 text-white`}>
+                        <button onClick={() => onCheckin(toolDetails)} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-yellow-500 text-white`}>
                             <Wrench size={16} />
                             <span>{t('tool.checkIn')}</span>
                         </button>

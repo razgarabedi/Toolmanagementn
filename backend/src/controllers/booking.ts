@@ -255,7 +255,11 @@ export const getMyBookings = async (req: Request, res: Response) => {
         const userId = (req as any).user.id;
         const bookings = await Booking.findAll({ 
             where: { userId },
-            include: [{ model: Tool, include: ['toolType'] }] 
+            include: [{ 
+                model: Tool, 
+                as: 'tool',
+                include: ['toolType'] 
+            }] 
         });
         res.status(200).json(bookings);
     } catch (error) {
@@ -315,8 +319,14 @@ export const checkOutTool = async (req: AuthRequest, res: Response) => {
 export const checkInTool = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const booking = await Booking.findByPk(id, { include: ['tool', 'user'] });
-        
+        const { condition, notes } = req.body;
+
+        if (!condition) {
+            return res.status(400).json({ message: 'Condition on return is required.' });
+        }
+
+        const booking = await Booking.findByPk(id, { include: ['tool'] });
+
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
@@ -325,36 +335,44 @@ export const checkInTool = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'Only active bookings can be checked in.' });
         }
 
-        booking.status = 'completed';
-        await booking.save();
+        // Check authorization: user who booked, admin or manager
+        if (booking.userId !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'manager') {
+            return res.status(403).json({ message: 'You are not authorized to check in this tool.' });
+        }
 
-        // Fetch tool with associations
-        const tool = await Tool.findByPk(booking.toolId, {
-            include: [
-                { model: ToolType, as: 'toolType' },
-                { model: Location, as: 'location' },
-                { model: Manufacturer, as: 'manufacturer' }
-            ]
-        });
-        const user = (booking as any).user;
+        const tool = await Tool.findByPk(booking.toolId);
+        if (!tool) {
+            return res.status(404).json({ message: 'Tool not found' });
+        }
+        
+        booking.status = 'completed';
+        booking.conditionOnReturn = condition;
+        booking.checkinNotes = notes;
+
+        tool.status = 'available';
+        tool.condition = condition;
+        tool.currentOwnerId = undefined;
+
+        await booking.save();
+        await tool.save();
+
+        const user = await (await import('../models/user')).default.findByPk(booking.userId);
+        const lang = req.headers['accept-language']?.split(',')[0] || 'en';
+
         const notification = await Notification.create({
             userId: booking.userId,
             toolId: booking.toolId,
             messageKey: 'toolCheckedIn',
             messagePayload: {
-                toolName: tool?.name,
-                serialNumber: tool?.serialNumber,
-                rfid: tool?.rfid,
-                toolType: (tool as any)?.toolType?.name,
-                location: (tool as any)?.location?.name,
-                manufacturer: (tool as any)?.manufacturer?.name,
+                toolName: tool.name,
                 username: user?.username
             }
         });
         io.to(`user_${booking.userId}`).emit('notification', notification);
 
-        res.status(200).json(booking);
+        res.status(200).json({ message: 'Tool checked in successfully' });
     } catch (error) {
+        console.error("Error checking in tool:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
 }

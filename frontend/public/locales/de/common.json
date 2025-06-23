@@ -214,5 +214,16 @@
         "submit": "Buchung anfragen",
         "success": "Buchungsanfrage erfolgreich übermittelt.",
         "error": "Fehler beim Übermitteln der Buchungsanfrage."
+    },
+    "checkinForm": {
+        "title": "Check-in für {{toolName}}",
+        "returnCondition": "Zustand bei Rückgabe",
+        "notesLabel": "Notizen (optional)",
+        "cancelButton": "Abbrechen",
+        "confirmButton": "Check-in bestätigen",
+        "condition_new": "Neu",
+        "condition_good": "Gut",
+        "condition_fair": "Mittel",
+        "condition_poor": "Schlecht"
     }
 }

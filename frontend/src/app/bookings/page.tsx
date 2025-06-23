@@ -9,6 +9,7 @@ import Spinner from '@/components/Spinner';
 import { TFunction } from 'i18next';
 import toast from 'react-hot-toast';
 import useAuth from '@/hooks/useAuth';
+import CheckinForm from '@/components/CheckinForm';
 
 interface Booking {
   id: number;
@@ -28,9 +29,12 @@ interface Booking {
   notes?: string;
 }
 
+type Condition = 'new' | 'good' | 'fair' | 'poor';
+
 const BookingActions = ({ booking, t }: { booking: Booking, t: TFunction }) => {
     const queryClient = useQueryClient();
     const { user } = useAuth();
+    const [isCheckinModalOpen, setCheckinModalOpen] = useState(false);
     
     const mutationOptions = {
         onSuccess: () => {
@@ -46,7 +50,20 @@ const BookingActions = ({ booking, t }: { booking: Booking, t: TFunction }) => {
     const rejectMutation = useMutation({ ...mutationOptions, mutationFn: () => api.put(`/bookings/${booking.id}/reject`), });
     const cancelMutation = useMutation({ ...mutationOptions, mutationFn: () => api.put(`/bookings/${booking.id}/cancel`), });
     const checkoutMutation = useMutation({ ...mutationOptions, mutationFn: () => api.put(`/bookings/${booking.id}/checkout`), });
-    const checkinMutation = useMutation({ ...mutationOptions, mutationFn: () => api.put(`/bookings/${booking.id}/checkin`), });
+    const checkinMutation = useMutation({ 
+        ...mutationOptions, 
+        mutationFn: (data: { condition: Condition; notes?: string }) => 
+            api.put(`/bookings/${booking.id}/checkin`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['tools'] });
+            setCheckinModalOpen(false);
+        }
+    });
+
+    const handleConfirmCheckin = (data: { condition: Condition; notes?: string }) => {
+        checkinMutation.mutate(data);
+    };
 
     const isCheckoutAllowed = new Date(booking.startDate) <= new Date();
 
@@ -75,9 +92,19 @@ const BookingActions = ({ booking, t }: { booking: Booking, t: TFunction }) => {
                 </>
             )}
             {booking.status === 'active' && (
-                 <button onClick={() => checkinMutation.mutate()} disabled={checkinMutation.isPending} className="w-full bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 flex items-center justify-center gap-1">
-                    {t('bookings.checkin')}
-                </button>
+                <>
+                    <button onClick={() => setCheckinModalOpen(true)} disabled={checkinMutation.isPending} className="w-full bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 flex items-center justify-center gap-1">
+                        {t('bookings.checkin')}
+                    </button>
+                    {isCheckinModalOpen && (
+                        <CheckinForm
+                            tool={booking.tool}
+                            booking={booking}
+                            onClose={() => setCheckinModalOpen(false)}
+                            onSubmit={handleConfirmCheckin}
+                        />
+                    )}
+                </>
             )}
         </div>
     )

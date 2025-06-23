@@ -27,6 +27,17 @@ interface MissingToolReportItem {
     user: { username: string };
 }
 
+interface BookingReportItem {
+    id: number;
+    tool: { name: string };
+    user: { username: string };
+    startDate: string;
+    endDate: string;
+    status: string;
+    conditionOnReturn?: string;
+    checkinNotes?: string;
+}
+
 const ReportsPage = () => {
     const { isAuthenticated, loading: authLoading, hasRole } = useAuth();
     const router = useRouter();
@@ -51,13 +62,19 @@ const ReportsPage = () => {
         enabled: !!(isAuthenticated && isAuthorized),
     });
 
+    const { data: bookingReport, isLoading: bookingReportLoading } = useQuery<BookingReportItem[]>({
+        queryKey: ['bookingReport'],
+        queryFn: () => api.get('/dashboard/reports/bookings').then(res => res.data),
+        enabled: !!(isAuthenticated && isAuthorized),
+    });
+
     useEffect(() => {
         if (!authLoading && (!isAuthenticated || !isAuthorized)) {
             router.push('/login');
         }
     }, [isAuthenticated, authLoading, router, isAuthorized]);
 
-    if (authLoading || maintenanceLoading || utilizationLoading || missingToolsLoading) {
+    if (authLoading || maintenanceLoading || utilizationLoading || missingToolsLoading || bookingReportLoading) {
         return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
     }
     
@@ -133,6 +150,36 @@ const ReportsPage = () => {
                                 <td className="px-6 py-4 whitespace-nowrap">{item.tool.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{item.user.username}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{new Date(item.endDate).toLocaleDateString()}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="bg-white p-6 rounded shadow-md mt-8">
+                <h2 className="text-xl font-bold mb-4">Booking Report</h2>
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tool Name</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition on Return</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {bookingReport?.map(item => (
+                            <tr key={item.id}>
+                                <td className="px-6 py-4 whitespace-nowrap">{item.tool.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{item.user.username}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{new Date(item.startDate).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{new Date(item.endDate).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{item.status}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{item.conditionOnReturn || 'N/A'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{item.checkinNotes || 'N/A'}</td>
                             </tr>
                         ))}
                     </tbody>

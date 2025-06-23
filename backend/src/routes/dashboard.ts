@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getInventorySummary, getMaintenanceSummary, getUtilizationSummary, getMaintenanceCostReport, getUtilizationReport, getMissingToolsReport } from '../controllers/dashboard';
+import { getInventorySummary, getMaintenanceSummary, getUtilizationSummary, getMaintenanceCostReport, getUtilizationReport, getMissingToolsReport, getBookingReport } from '../controllers/dashboard';
 import { auth, authorize } from '../middleware/auth';
 
 const router = Router();
@@ -10,5 +10,6 @@ router.get('/utilization', [auth, authorize(['admin', 'manager'])], getUtilizati
 router.get('/reports/maintenance-cost', [auth, authorize(['admin', 'manager'])], getMaintenanceCostReport);
 router.get('/reports/utilization', [auth, authorize(['admin', 'manager'])], getUtilizationReport);
 router.get('/reports/missing-tools', [auth, authorize(['admin', 'manager'])], getMissingToolsReport);
+router.get('/reports/bookings', [auth, authorize(['admin', 'manager'])], getBookingReport);
 
 export default router; 

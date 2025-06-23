@@ -26,6 +26,18 @@ interface ToolInstance {
     };
 }
 
+interface ToolInstanceCardProps {
+    instance: ToolInstance;
+    onEdit: (instance: ToolInstance) => void;
+    onDelete: (instance: ToolInstance) => void;
+    onPreview: (instance: ToolInstance) => void;
+    onBook: (instance: ToolInstance) => void;
+    onCheckout: (instance: ToolInstance) => void;
+    onCheckin: (instance: ToolInstance) => void;
+    canManage: boolean;
+    canBook: boolean;
+}
+
 const ToolInstanceCard = ({ 
     instance, 
     onEdit, 
@@ -33,16 +45,10 @@ const ToolInstanceCard = ({
     onPreview,
     onBook,
     onCheckout,
-    onCheckin
-}: { 
-    instance: ToolInstance, 
-    onEdit: () => void, 
-    onDelete: () => void, 
-    onPreview: () => void,
-    onBook: () => void,
-    onCheckout: () => void,
-    onCheckin: () => void
-}) => {
+    onCheckin,
+    canManage,
+    canBook
+}: ToolInstanceCardProps) => {
     const { t } = useTranslation('common');
     const { user } = useAuth();
 
@@ -71,7 +77,7 @@ const ToolInstanceCard = ({
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer" onClick={onPreview}>
+        <div className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer" onClick={() => onPreview(instance)}>
             <div className="relative h-40">
                 <SafeImage
                     src={instanceImageUrl || toolTypeImageUrl || ''}
@@ -99,19 +105,19 @@ const ToolInstanceCard = ({
                     <div className="flex gap-2">
                         {instance.status === 'available' ? (
                             <>
-                                <button onClick={(e) => { e.stopPropagation(); onCheckout(); }} className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">{t('toolInstanceCard.checkout')}</button>
-                                <button onClick={(e) => { e.stopPropagation(); onBook(); }} className="bg-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-400">{t('toolInstanceCard.book')}</button>
+                                <button onClick={(e) => { e.stopPropagation(); onCheckout(instance); }} className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">{t('toolInstanceCard.checkout')}</button>
+                                <button onClick={(e) => { e.stopPropagation(); onBook(instance); }} className="bg-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-400">{t('toolInstanceCard.book')}</button>
                             </>
                         ) : instance.status === 'in_use' ? (
-                            <button onClick={(e) => { e.stopPropagation(); onCheckin(); }} className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600">{t('toolInstanceCard.checkin')}</button>
+                            <button onClick={(e) => { e.stopPropagation(); onCheckin(instance); }} className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600">{t('toolInstanceCard.checkin')}</button>
                         ) : null}
                     </div>
-                    {(user?.role === 'admin' || user?.role === 'manager') && (
+                    {canManage && (
                         <div className="flex gap-2">
-                            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="text-blue-500 hover:text-blue-700">
+                            <button onClick={(e) => { e.stopPropagation(); onEdit(instance); }} className="text-blue-500 hover:text-blue-700">
                                 <Edit size={20} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-red-500 hover:text-red-700">
+                            <button onClick={(e) => { e.stopPropagation(); onDelete(instance); }} className="text-red-500 hover:text-red-700">
                                 <Trash2 size={20} />
                             </button>
                         </div>

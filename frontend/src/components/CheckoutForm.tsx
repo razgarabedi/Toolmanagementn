@@ -60,10 +60,11 @@ const CheckoutForm = ({ tool, onClose, onSubmit, isAdminOrManager }: CheckoutFor
     };
 
     const formatDateForInput = (date: Date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}.${month}.${year}`;
+        if (!date || isNaN(date.getTime())) {
+            return '';
+        }
+        const tempDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+        return tempDate.toISOString().split('T')[0];
     };
 
     return (
@@ -100,21 +101,14 @@ const CheckoutForm = ({ tool, onClose, onSubmit, isAdminOrManager }: CheckoutFor
                     )}
                     <div className="mb-4">
                         <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Voraussichtliches Rückgabedatum')}</label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                id="endDate"
-                                value={formatDateForInput(endDate)}
-                                readOnly
-                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 dark:text-white"
-                            />
-                            <input
-                                type="date"
-                                onChange={(e) => setEndDate(new Date(e.target.value))}
-                                className="absolute right-0 top-0 h-full w-full opacity-0 cursor-pointer"
-                                required
-                            />
-                        </div>
+                        <input
+                            type="date"
+                            id="endDate"
+                            value={formatDateForInput(endDate)}
+                            onChange={(e) => setEndDate(new Date(e.target.value))}
+                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 dark:text-white"
+                            required
+                        />
                     </div>
                     <div className="mb-6">
                         <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('Notizen (optional)')}</label>
