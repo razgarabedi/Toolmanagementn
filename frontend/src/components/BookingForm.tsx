@@ -24,17 +24,19 @@ interface BookingFormProps {
     tool: Tool | null;
     onClose: () => void;
     isAdminOrManager: boolean;
+    startDate?: Date;
+    endDate?: Date;
 }
 
-const BookingForm = ({ tool, onClose, isAdminOrManager }: BookingFormProps) => {
+const BookingForm = ({ tool, onClose, isAdminOrManager, startDate: initialStartDate, endDate: initialEndDate }: BookingFormProps) => {
     const { t } = useTranslation('common');
     const queryClient = useQueryClient();
-    const [startDate, setStartDate] = useState<Date>(new Date());
-    const [endDate, setEndDate] = useState<Date>(() => {
+    const [startDate, setStartDate] = useState<Date>(initialStartDate || new Date());
+    const [endDate, setEndDate] = useState<Date>(initialEndDate || (() => {
         const date = new Date();
         date.setDate(date.getDate() + 1);
         return date;
-    });
+    })());
     const [notes, setNotes] = useState('');
     const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
 

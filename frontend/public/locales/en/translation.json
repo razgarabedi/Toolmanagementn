@@ -226,13 +226,23 @@
   },
   "calendar": {
     "selectTool": "Select a tool",
+    "searchTool": "Search for a tool...",
+    "noToolsFound": "No tools found.",
     "pleaseSelectTool": "Please select a tool to see its availability.",
     "selectDay": "Select a day to create a booking.",
     "previousMonth": "Previous",
     "nextMonth": "Next",
     "today": "Today",
     "pastDay": "Past",
-    "availableDay": "Available"
+    "availableDay": "Available",
+    "pleaseSelectToolFirst": "Please select a tool first.",
+    "startDateSelected": "Start date selected. Please select an end date.",
+    "newStartDateSelected": "New start date selected. Please select an end date.",
+    "startDate": "Start Date",
+    "cannotBookPastDates": "Cannot book in the past.",
+    "dateAlreadyBooked": "This date is already booked.",
+    "rangeAlreadyBooked": "This date range overlaps with an existing booking.",
+    "booked": "Booked"
   },
   "toolInstance": {
     "serialNumber": "S/N: {{serialNumber}}",

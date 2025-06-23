@@ -226,16 +226,26 @@
   },
   "calendar": {
     "selectTool": "Werkzeug auswählen",
+    "searchTool": "Werkzeug suchen...",
+    "noToolsFound": "Keine Werkzeuge gefunden.",
     "pleaseSelectTool": "Bitte wählen Sie ein Werkzeug aus, um dessen Verfügbarkeit anzuzeigen.",
     "selectDay": "Wählen Sie einen Tag aus, um eine Buchung zu erstellen.",
     "previousMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
     "today": "Heute",
     "pastDay": "Vergangen",
-    "availableDay": "Verfügbar"
+    "availableDay": "Verfügbar",
+    "pleaseSelectToolFirst": "Bitte wählen Sie zuerst ein Werkzeug aus.",
+    "startDateSelected": "Startdatum ausgewählt. Bitte wählen Sie ein Enddatum aus.",
+    "newStartDateSelected": "Neues Startdatum ausgewählt. Bitte wählen Sie ein Enddatum aus.",
+    "startDate": "Startdatum",
+    "cannotBookPastDates": "Buchungen in der Vergangenheit sind nicht möglich.",
+    "dateAlreadyBooked": "Dieses Datum ist bereits gebucht.",
+    "rangeAlreadyBooked": "Dieser Zeitraum überschneidet sich mit einer bestehenden Buchung.",
+    "booked": "Gebucht"
   },
   "toolInstance": {
-    "serialNumber": "S/N: {{serialNumber}}",
+    "seriennummer": "S/N: {{serialNumber}}",
     "location": "Standort: {{location}}",
     "checkout": "Auschecken",
     "book": "Buchen"
