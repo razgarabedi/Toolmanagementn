@@ -253,11 +253,19 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
 export const getMyBookings = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
         const bookings = await Booking.findAll({ 
-            where: { userId },
+            where: { 
+                userId,
+                createdAt: { [Op.gte]: oneMonthAgo }
+            },
+            order: [['createdAt', 'DESC']],
             include: [{ 
                 model: Tool, 
                 as: 'tool',
+                attributes: ['id', 'name', 'condition'],
                 include: ['toolType'] 
             }] 
         });

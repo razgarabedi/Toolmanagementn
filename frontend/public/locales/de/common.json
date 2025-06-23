@@ -137,7 +137,8 @@
         "notes": "Notizen"
     },
     "users": {
-        "title": "Benutzer"
+        "title": "Benutzer",
+        "newUser": "Neuer Benutzer"
     },
     "settings": {
         "title": "Einstellungen",
@@ -225,5 +226,74 @@
         "condition_good": "Gut",
         "condition_fair": "Mittel",
         "condition_poor": "Schlecht"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "tools": "Werkzeuge",
+        "bookings": "Buchungen",
+        "my-bookings": "Meine Buchungen",
+        "maintenance": "Wartung",
+        "locations": "Standorte",
+        "spare-parts": "Ersatzteile",
+        "settings": "Einstellungen",
+        "users": "Benutzer",
+        "notifications": "Benachrichtigungen"
+    },
+    "myBookings": {
+        "title": "Meine Buchungen",
+        "noBookings": "Sie haben keine Buchungen.",
+        "tool": "Werkzeug",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "status": "Status",
+        "actions": "Aktionen",
+        "checkOut": "Auschecken",
+        "cancel": "Stornieren",
+        "checkIn": "Einchecken",
+        "page": "Seite {{currentPage}} von {{totalPages}}",
+        "previous": "Zurück",
+        "next": "Weiter"
+    },
+    "tool": {
+        "details": {
+            "title": "Werkzeugdetails",
+            "name": "Name"
+        }
+    },
+    "toolPreview": {
+        "description": "Beschreibung",
+        "location": "Standort",
+        "manufacturer": "Hersteller",
+        "purchaseDate": "Kaufdatum",
+        "cost": "Kosten",
+        "warrantyEndDate": "Garantieende",
+        "type": "Typ",
+        "rfid": "RFID",
+        "category": "Kategorie",
+        "serialNumber": "Seriennummer",
+        "tabs": {
+            "details": "Details",
+            "bookings": "Buchungen",
+            "maintenance": "Wartung",
+            "attachments": "Anhänge"
+        },
+        "directCheckout": "Direkt auschecken",
+        "requestBooking": "Buchung anfragen",
+        "checkIn": "Einchecken",
+        "logMaintenance": "Wartung protokollieren"
+    },
+    "toolDetail": {
+        "type": "Typ",
+        "category": "Kategorie",
+        "manufacturer": "Hersteller",
+        "location": "Standort",
+        "rfid": "RFID",
+        "serialNumber": "Seriennummer",
+        "checkedOutTo": "Ausgecheckt an",
+        "returnDate": "Rückgabedatum: {{date}}",
+        "checkoutSuccess": "Werkzeug erfolgreich ausgecheckt!",
+        "checkoutError": "Werkzeug konnte nicht ausgecheckt werden.",
+        "checkout": "Auschecken",
+        "book": "Buchen"
     }
 }

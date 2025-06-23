@@ -100,10 +100,51 @@
         "logMaintenance": "Log Maintenance",
         "editTool": "Edit Tool",
         "lifecycle": "Lifecycle",
-        "previewTitle": "Tool Preview"
+        "previewTitle": "Tool Preview",
+        "details": {
+            "title": "Tool Details",
+            "name": "Name"
+        }
+    },
+    "toolPreview": {
+        "description": "Description",
+        "location": "Location",
+        "manufacturer": "Manufacturer",
+        "purchaseDate": "Purchase Date",
+        "cost": "Cost",
+        "warrantyEndDate": "Warranty End Date",
+        "type": "Type",
+        "rfid": "RFID",
+        "category": "Category",
+        "serialNumber": "Serial Number",
+        "tabs": {
+            "details": "Details",
+            "bookings": "Bookings",
+            "maintenance": "Maintenance",
+            "attachments": "Attachments"
+        },
+        "directCheckout": "Direct Checkout",
+        "requestBooking": "Request/Booking",
+        "checkIn": "Check In",
+        "logMaintenance": "Log Maintenance"
+    },
+    "toolDetail": {
+        "type": "Type",
+        "category": "Category",
+        "manufacturer": "Manufacturer",
+        "location": "Location",
+        "rfid": "RFID",
+        "serialNumber": "Serial Number",
+        "checkedOutTo": "Checked out to",
+        "returnDate": "Return date: {{date}}",
+        "checkoutSuccess": "Tool checked out successfully!",
+        "checkoutError": "Failed to checkout tool.",
+        "checkout": "Checkout",
+        "book": "Book"
     },
     "users": {
-        "title": "Users"
+        "title": "Users",
+        "newUser": "New User"
     },
     "settings": {
         "title": "Settings",
@@ -193,5 +234,32 @@
         "condition_good": "Good",
         "condition_fair": "Fair",
         "condition_poor": "Poor"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "tools": "Tools",
+        "bookings": "Bookings",
+        "my-bookings": "My Bookings",
+        "maintenance": "Maintenance",
+        "locations": "Locations",
+        "spare-parts": "Spare Parts",
+        "settings": "Settings",
+        "users": "Users",
+        "notifications": "Notifications"
+    },
+    "myBookings": {
+        "title": "My Bookings",
+        "noBookings": "You have no bookings.",
+        "tool": "Tool",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "status": "Status",
+        "actions": "Actions",
+        "checkOut": "Check Out",
+        "cancel": "Cancel",
+        "checkIn": "Check In",
+        "page": "Page {{currentPage}} of {{totalPages}}",
+        "previous": "Previous",
+        "next": "Next"
     }
 } 

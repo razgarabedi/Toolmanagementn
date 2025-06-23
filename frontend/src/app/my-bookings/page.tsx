@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import CheckinForm from '@/components/CheckinForm';
+import { useTranslation } from 'react-i18next';
 
 interface Tool {
     id: number;
@@ -30,8 +31,11 @@ const MyBookingsPage = () => {
     const { isAuthenticated, loading: authLoading } = useAuth();
     const router = useRouter();
     const queryClient = useQueryClient();
+    const { t } = useTranslation('common');
     const [isCheckinModalOpen, setCheckinModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const bookingsPerPage = 15;
 
     const { data: bookings, isLoading, isError, error } = useQuery<Booking[]>({
         queryKey: ['my-bookings'],
@@ -53,7 +57,7 @@ const MyBookingsPage = () => {
     });
 
     const checkOutMutation = useMutation({
-        mutationFn: (bookingId: number) => api.put(`/bookings/${bookingId}/checkout`),
+        mutationFn: (bookingId: number) => api.put(`/bookings/checkout/${bookingId}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
             toast.success('Tool checked out successfully!');
@@ -65,7 +69,7 @@ const MyBookingsPage = () => {
 
     const checkInMutation = useMutation({
         mutationFn: (data: { bookingId: number, condition: Condition, notes?: string }) => 
-            api.put(`/bookings/${data.bookingId}/checkin`, { condition: data.condition, notes: data.notes }),
+            api.put(`/bookings/checkin/${data.bookingId}`, { condition: data.condition, notes: data.notes }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
             toast.success('Tool checked in successfully!');
@@ -88,6 +92,10 @@ const MyBookingsPage = () => {
         setCheckinModalOpen(true);
     };
 
+    const handleCheckoutClick = (bookingId: number) => {
+        checkOutMutation.mutate(bookingId);
+    };
+
     const handleCheckinSubmit = (data: { condition: Condition; notes?: string }) => {
         if (selectedBooking) {
             checkInMutation.mutate({ bookingId: selectedBooking.id, ...data });
@@ -102,67 +110,93 @@ const MyBookingsPage = () => {
         return <div className="container mx-auto p-4">Error: {(error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to fetch bookings'}</div>;
     }
 
+    const indexOfLastBooking = currentPage * bookingsPerPage;
+    const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
+    const currentBookings = bookings?.slice(indexOfFirstBooking, indexOfLastBooking) || [];
+    const totalPages = Math.ceil((bookings?.length || 0) / bookingsPerPage);
+
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">My Bookings</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('myBookings.title')}</h1>
             <div className="bg-white p-6 rounded shadow-md">
                 {bookings && bookings.length > 0 ? (
-                    <table className="min-w-full bg-white">
-                        <thead>
-                            <tr>
-                                <th className="py-2">Tool</th>
-                                <th className="py-2">Start Date</th>
-                                <th className="py-2">End Date</th>
-                                <th className="py-2">Status</th>
-                                <th className="py-2">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {bookings.map((booking) => (
-                                <tr key={booking.id}>
-                                    <td className="border px-4 py-2">
-                                        <Link href={`/tools/${booking.tool.id}`} className="text-blue-600 hover:underline">
-                                            {booking.tool.name}
-                                        </Link>
-                                    </td>
-                                    <td className="border px-4 py-2">{new Date(booking.startDate).toLocaleDateString()}</td>
-                                    <td className="border px-4 py-2">{new Date(booking.endDate).toLocaleDateString()}</td>
-                                    <td className="border px-4 py-2">{booking.status}</td>
-                                    <td className="border px-4 py-2">
-                                        {booking.status === 'booked' && (
-                                            <>
-                                                <button 
-                                                    onClick={() => checkOutMutation.mutate(booking.id)}
-                                                    className="bg-green-500 text-white px-2 py-1 rounded mr-2"
-                                                    disabled={checkOutMutation.isPending}
-                                                >
-                                                    Check Out
-                                                </button>
-                                                <button 
-                                                    onClick={() => cancelMutation.mutate(booking.id)}
-                                                    className="bg-red-500 text-white px-2 py-1 rounded"
-                                                    disabled={cancelMutation.isPending}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        )}
-                                        {booking.status === 'active' && (
-                                            <button
-                                                onClick={() => handleCheckinClick(booking)}
-                                                className="bg-blue-500 text-white px-2 py-1 rounded"
-                                                disabled={checkInMutation.isPending}
-                                            >
-                                                Check In
-                                            </button>
-                                        )}
-                                    </td>
+                    <>
+                        <table className="min-w-full bg-white">
+                            <thead>
+                                <tr>
+                                    <th className="py-2">{t('myBookings.tool')}</th>
+                                    <th className="py-2">{t('myBookings.startDate')}</th>
+                                    <th className="py-2">{t('myBookings.endDate')}</th>
+                                    <th className="py-2">{t('myBookings.status')}</th>
+                                    <th className="py-2">{t('myBookings.actions')}</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {currentBookings.map((booking) => (
+                                    <tr key={booking.id}>
+                                        <td className="border px-4 py-2">
+                                            <Link href={`/tools/${booking.tool.id}`} className="text-blue-600 hover:underline">
+                                                {booking.tool.name}
+                                            </Link>
+                                        </td>
+                                        <td className="border px-4 py-2">{new Date(booking.startDate).toLocaleDateString()}</td>
+                                        <td className="border px-4 py-2">{new Date(booking.endDate).toLocaleDateString()}</td>
+                                        <td className="border px-4 py-2">{booking.status}</td>
+                                        <td className="border px-4 py-2">
+                                            {booking.status === 'approved' && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => handleCheckoutClick(booking.id)}
+                                                        className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+                                                        disabled={checkOutMutation.isPending}
+                                                    >
+                                                        {t('myBookings.checkOut')}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => cancelMutation.mutate(booking.id)}
+                                                        className="bg-red-500 text-white px-2 py-1 rounded"
+                                                        disabled={cancelMutation.isPending}
+                                                    >
+                                                        {t('myBookings.cancel')}
+                                                    </button>
+                                                </>
+                                            )}
+                                            {booking.status === 'active' && (
+                                                <button
+                                                    onClick={() => handleCheckinClick(booking)}
+                                                    className="bg-blue-500 text-white px-2 py-1 rounded"
+                                                    disabled={checkInMutation.isPending}
+                                                >
+                                                    {t('myBookings.checkIn')}
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <div className="mt-4 flex justify-between items-center">
+                            <span>{t('myBookings.page', { currentPage, totalPages })}</span>
+                            <div>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded mr-2 disabled:opacity-50"
+                                >
+                                    {t('myBookings.previous')}
+                                </button>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50"
+                                >
+                                    {t('myBookings.next')}
+                                </button>
+                            </div>
+                        </div>
+                    </>
                 ) : (
-                    <p>You have no bookings.</p>
+                    <p>{t('myBookings.noBookings')}</p>
                 )}
             </div>
             {isCheckinModalOpen && selectedBooking && (

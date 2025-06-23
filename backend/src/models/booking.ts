@@ -14,6 +14,7 @@ interface BookingAttributes {
   overdueNotified?: boolean;
   checkinNotes?: string;
   conditionOnReturn?: 'new' | 'good' | 'fair' | 'poor';
+  createdAt?: Date;
 }
 
 interface BookingCreationAttributes extends Optional<BookingAttributes, 'id'> {}

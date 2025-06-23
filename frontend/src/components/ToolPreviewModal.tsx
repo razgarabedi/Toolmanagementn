@@ -59,12 +59,12 @@ const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: Tool
         const { toolType } = toolDetails;
 
         const detailItems = [
-            { label: t('tool.description'), value: toolDetails.description || toolType.description },
-            { label: t('tool.location'), value: toolDetails.location?.name },
-            { label: t('tool.manufacturer'), value: toolType.manufacturer?.name },
-            { label: t('tool.purchaseDate'), value: toolDetails.purchaseDate ? new Date(toolDetails.purchaseDate).toLocaleDateString() : 'N/A' },
-            { label: t('tool.cost'), value: toolDetails.cost ? `${toolDetails.cost.toFixed(2)} €` : 'N/A' },
-            { label: t('tool.warrantyEndDate'), value: toolDetails.warrantyEndDate ? new Date(toolDetails.warrantyEndDate).toLocaleDateString() : 'N/A' },
+            { label: t('toolPreview.description'), value: toolDetails.description || toolType.description },
+            { label: t('toolPreview.location'), value: toolDetails.location?.name },
+            { label: t('toolPreview.manufacturer'), value: toolType.manufacturer?.name },
+            { label: t('toolPreview.purchaseDate'), value: toolDetails.purchaseDate ? new Date(toolDetails.purchaseDate).toLocaleDateString() : 'N/A' },
+            { label: t('toolPreview.cost'), value: toolDetails.cost ? `${toolDetails.cost.toFixed(2)} €` : 'N/A' },
+            { label: t('toolPreview.warrantyEndDate'), value: toolDetails.warrantyEndDate ? new Date(toolDetails.warrantyEndDate).toLocaleDateString() : 'N/A' },
         ];
         
         const getStatusIndicator = (status: string) => {
@@ -98,17 +98,17 @@ const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: Tool
                             {getStatusIndicator(toolDetails.status)}
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                            <p><strong>{t('tool.type')}:</strong> {toolType.category?.name}</p>
-                            <p><strong>{t('tool.rfid')}:</strong> {toolDetails.rfid}</p>
-                            <p><strong>{t('tool.category')}/{t('tool.serialNumber')}:</strong> {toolDetails.serialNumber}</p>
+                            <p><strong>{t('toolPreview.type')}:</strong> {toolType.category?.name}</p>
+                            <p><strong>{t('toolPreview.rfid')}:</strong> {toolDetails.rfid}</p>
+                            <p><strong>{t('toolPreview.category')}/{t('toolPreview.serialNumber')}:</strong> {toolDetails.serialNumber}</p>
                         </div>
                         
                         <div className="mt-6 border-b border-gray-200">
                             <nav className="flex space-x-4">
-                                <button onClick={() => setActiveTab('details')} className={`py-2 px-1 font-semibold ${activeTab === 'details' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('tool.tabs.details')}</button>
-                                <button onClick={() => setActiveTab('bookings')} className={`py-2 px-1 font-semibold ${activeTab === 'bookings' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('tool.tabs.bookings')}</button>
-                                <button onClick={() => setActiveTab('maintenance')} className={`py-2 px-1 font-semibold ${activeTab === 'maintenance' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('tool.tabs.maintenance')}</button>
-                                <button onClick={() => setActiveTab('attachments')} className={`py-2 px-1 font-semibold ${activeTab === 'attachments' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('tool.tabs.attachments')}</button>
+                                <button onClick={() => setActiveTab('details')} className={`py-2 px-1 font-semibold ${activeTab === 'details' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('toolPreview.tabs.details')}</button>
+                                <button onClick={() => setActiveTab('bookings')} className={`py-2 px-1 font-semibold ${activeTab === 'bookings' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('toolPreview.tabs.bookings')}</button>
+                                <button onClick={() => setActiveTab('maintenance')} className={`py-2 px-1 font-semibold ${activeTab === 'maintenance' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('toolPreview.tabs.maintenance')}</button>
+                                <button onClick={() => setActiveTab('attachments')} className={`py-2 px-1 font-semibold ${activeTab === 'attachments' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`}>{t('toolPreview.tabs.attachments')}</button>
                             </nav>
                         </div>
 
@@ -132,22 +132,22 @@ const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: Tool
                         <>
                             <button onClick={() => onCheckout(toolDetails)} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-purple-600 text-white`}>
                                 <CheckCircle size={16} />
-                                <span>{t('tool.directCheckout')}</span>
+                                <span>{t('toolPreview.directCheckout')}</span>
                             </button>
                             <button onClick={() => onBook(toolDetails)} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-white border border-gray-300`}>
                                 <Bookmark size={16} />
-                                <span>{t('tool.requestBooking')}</span>
+                                <span>{t('toolPreview.requestBooking')}</span>
                             </button>
                         </>
                     ) : toolDetails.status === 'in_use' ? (
                         <button onClick={() => onCheckin(toolDetails)} className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-yellow-500 text-white`}>
                             <Wrench size={16} />
-                            <span>{t('tool.checkIn')}</span>
+                            <span>{t('toolPreview.checkIn')}</span>
                         </button>
                     ) : null}
                      <button className={`flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-semibold bg-white border border-gray-300`}>
                         <Wrench size={16} />
-                        <span>{t('tool.logMaintenance')}</span>
+                        <span>{t('toolPreview.logMaintenance')}</span>
                     </button>
                 </div>
             </>
