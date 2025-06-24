@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
-import { Maintenance, Tool, Attachment } from '../models';
+import { Maintenance, Tool, Attachment, User } from '../models';
+import { AuthRequest } from '../middleware/auth';
 
 export const createMaintenance = async (req: Request, res: Response) => {
     try {
-        const { toolId, description, cost, startDate, endDate, status } = req.body;
+        const { toolId, description, cost, startDate, status } = req.body;
 
         const tool = await Tool.findByPk(toolId);
         if (!tool) {
@@ -15,9 +16,13 @@ export const createMaintenance = async (req: Request, res: Response) => {
             description,
             cost,
             startDate,
-            endDate,
             status,
         });
+
+        if (status === 'in_progress' || status === 'scheduled') {
+            tool.status = 'in_maintenance';
+            await tool.save();
+        }
 
         res.status(201).json(maintenance);
     } catch (error: any) {
@@ -28,7 +33,16 @@ export const createMaintenance = async (req: Request, res: Response) => {
 export const getToolMaintenanceHistory = async (req: Request, res: Response) => {
     try {
         const { toolId } = req.params;
-        const history = await Maintenance.findAll({ where: { toolId }, order: [['startDate', 'DESC']] });
+        const history = await Maintenance.findAll({
+            where: { toolId },
+            order: [['startDate', 'DESC']],
+            include: [{
+                model: User,
+                as: 'completedByUser',
+                attributes: ['id', 'username']
+            }],
+            limit: 4
+        });
         res.status(200).json(history);
     } catch (error: any) {
         res.status(500).json({ message: 'Something went wrong', error: error.message });
@@ -38,7 +52,11 @@ export const getToolMaintenanceHistory = async (req: Request, res: Response) => 
 export const getAllMaintenance = async (req: Request, res: Response) => {
     try {
         const maintenanceTasks = await Maintenance.findAll({
-            include: [{ model: Tool, as: 'tool', attributes: ['name', 'id'] }],
+            include: [{
+                model: Tool,
+                as: 'tool',
+                attributes: ['id', 'name', 'instanceImage']
+            }],
             order: [['startDate', 'DESC']]
         });
         res.status(200).json(maintenanceTasks);
@@ -65,7 +83,7 @@ export const updateMaintenance = async (req: Request, res: Response) => {
     }
 }
 
-export const finishMaintenance = async (req: Request, res: Response) => {
+export const finishMaintenance = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { notes } = req.body;
@@ -80,6 +98,9 @@ export const finishMaintenance = async (req: Request, res: Response) => {
         maintenance.endDate = new Date();
         if (notes) {
             maintenance.notes = notes;
+        }
+        if (req.user) {
+            maintenance.completedByUserId = req.user.id;
         }
 
         await maintenance.save();

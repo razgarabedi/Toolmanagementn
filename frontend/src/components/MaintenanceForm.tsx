@@ -199,7 +199,7 @@ const MaintenanceForm = ({ toolId, tools, maintenanceId, onFormSubmit, isRepairR
                     />
                     <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full p-2 mb-2 border rounded dark:bg-gray-700 dark:border-gray-600">
                         <option value="scheduled">{t('maintenanceDashboard.status_scheduled')}</option>
-                        <option value="in-progress">{t('maintenanceDashboard.status_in_progress')}</option>
+                        <option value="in_progress">{t('maintenanceDashboard.status_in_progress')}</option>
                         <option value="completed">{t('maintenanceDashboard.status_completed')}</option>
                     </select>
                     

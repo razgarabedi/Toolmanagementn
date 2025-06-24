@@ -315,5 +315,14 @@
         "attach_file": "Attach File",
         "complete_maintenance": "Complete Maintenance",
         "error_completing": "Error completing maintenance."
+    },
+    "maintenance": {
+        "history_load_error": "Error loading maintenance history.",
+        "completed_on": "Completed on",
+        "completed_by": "Completed by",
+        "description": "Description",
+        "notes": "Notes",
+        "not_available": "N/A",
+        "no_history": "No maintenance history available."
     }
 } 

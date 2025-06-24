@@ -8,6 +8,7 @@ import Spinner from '@/components/Spinner';
 import { Circle, Wrench, CheckCircle, Edit, History, Bookmark, X } from 'lucide-react';
 import SafeImage from '@/components/SafeImage';
 import { getImageUrl } from '@/lib/utils';
+import MaintenanceHistoryTab from './MaintenanceHistoryTab';
 
 interface ToolPreviewModalProps {
     tool: any;
@@ -122,6 +123,9 @@ const ToolPreviewModal = ({ tool, onClose, onBook, onCheckout, onCheckin }: Tool
                                         </div>
                                     ))}
                                 </div>
+                            )}
+                            {activeTab === 'maintenance' && (
+                                <MaintenanceHistoryTab toolId={toolDetails.id} />
                             )}
                         </div>
                     </div>

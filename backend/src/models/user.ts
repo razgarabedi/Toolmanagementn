@@ -27,6 +27,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
     User.belongsTo(models.Role, { as: 'role', foreignKey: 'role_id' });
     User.hasMany(models.Booking, { as: 'bookings', foreignKey: 'userId' });
     User.hasMany(models.Notification, { as: 'notifications', foreignKey: 'userId' });
+    User.hasMany(models.Maintenance, { as: 'completedMaintenances', foreignKey: 'completedByUserId' });
   }
 }
 

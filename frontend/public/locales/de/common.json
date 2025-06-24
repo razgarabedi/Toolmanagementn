@@ -352,5 +352,14 @@
         "attach_file": "Datei anhängen",
         "complete_maintenance": "Wartung abschließen",
         "error_completing": "Fehler beim Abschluss der Wartung."
+    },
+    "maintenance": {
+        "history_load_error": "Fehler beim Laden des Wartungsverlaufs.",
+        "completed_on": "Abgeschlossen am",
+        "completed_by": "Abgeschlossen von",
+        "description": "Beschreibung",
+        "notes": "Notizen",
+        "not_available": "N/V",
+        "no_history": "Kein Wartungsverlauf verfügbar."
     }
 }

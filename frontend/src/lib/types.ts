@@ -5,6 +5,11 @@ export interface Maintenance {
     startDate: string;
     endDate?: string;
     status: string;
+    notes?: string;
+    completedByUser?: {
+        id: number;
+        username: string;
+    };
 }
 
 export interface Tool {

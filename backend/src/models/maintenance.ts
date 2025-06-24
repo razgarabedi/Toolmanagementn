@@ -12,6 +12,7 @@ interface MaintenanceAttributes {
   endDate?: Date;
   status: 'scheduled' | 'in_progress' | 'completed' | 'requested';
   notes?: string;
+  completedByUserId?: number;
 }
 
 interface MaintenanceCreationAttributes extends Optional<MaintenanceAttributes, 'id'> {}
@@ -26,6 +27,7 @@ class Maintenance extends Model<MaintenanceAttributes, MaintenanceCreationAttrib
   public endDate?: Date;
   public status!: 'scheduled' | 'in_progress' | 'completed' | 'requested';
   public notes?: string;
+  public completedByUserId?: number;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -33,6 +35,7 @@ class Maintenance extends Model<MaintenanceAttributes, MaintenanceCreationAttrib
   public static associate(models: any) {
     Maintenance.belongsTo(models.Tool, { as: 'tool', foreignKey: 'toolId' });
     Maintenance.belongsToMany(models.SparePart, { through: 'maintenance_spare_parts', as: 'spareParts', foreignKey: 'maintenanceId' });
+    Maintenance.belongsTo(models.User, { as: 'completedByUser', foreignKey: 'completedByUserId' });
   }
 }
 
@@ -75,6 +78,14 @@ Maintenance.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    completedByUserId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    }
   },
   {
     tableName: 'maintenances',
