@@ -164,18 +164,35 @@ export const getTools = async (req: Request, res: Response) => {
 
 export const getTool = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
-        const tool = await Tool.findByPk(id, {
-            include: [
-                { model: ToolType, as: 'toolType' },
-                { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
-                { model: Booking, as: 'bookings' },
-                { model: Maintenance, as: 'maintenances' },
-                { model: Location, as: 'location', attributes: ['id', 'name'] },
-                { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] },
-                { model: Attachment, as: 'attachments' }
-            ]
-        });
+        const { id: identifier } = req.params;
+        let tool: Tool | null = null;
+
+        const includeOptions = [
+            { model: ToolType, as: 'toolType' },
+            { model: User, as: 'currentOwner', attributes: ['id', 'username'] },
+            { model: Booking, as: 'bookings' },
+            { model: Maintenance, as: 'maintenances' },
+            { model: Location, as: 'location', attributes: ['id', 'name'] },
+            { model: Manufacturer, as: 'manufacturer', attributes: ['id', 'name'] },
+            { model: Attachment, as: 'attachments' }
+        ];
+
+        if (/^\d+$/.test(identifier)) {
+            tool = await Tool.findByPk(identifier, { include: includeOptions as any });
+        }
+
+        if (!tool) {
+            tool = await Tool.findOne({
+                where: {
+                    [Op.or]: [
+                        { rfid: identifier },
+                        { serialNumber: identifier }
+                    ]
+                },
+                include: includeOptions as any
+            });
+        }
+
         if (!tool) {
             return res.status(404).json({ message: 'Tool not found' });
         }
@@ -407,27 +424,48 @@ export const checkinTool = async (req: AuthRequest, res: Response) => {
 
 export const getMyCheckedOutTools = async (req: AuthRequest, res: Response) => {
     try {
-        const userId = req.user.id;
-        const tools = await Tool.findAll({ 
-            where: { currentOwnerId: userId },
-            include: [{ model: ToolType, as: 'toolType' }]
+        const userId = req.user!.id;
+        const tools = await Tool.findAll({
+            include: [{
+                model: Booking,
+                as: 'bookings',
+                where: {
+                    userId,
+                    status: 'active'
+                },
+                required: true
+            }]
         });
         res.status(200).json(tools);
     } catch (error) {
-        console.error("Error in getMyCheckedOutTools:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-}
+};
 
-export const getMyTools = async (req: Request, res: Response) => {
+export const getMyTools = async (req: AuthRequest, res: Response) => {
     try {
-        const userId = (req as any).user.id;
+        const userId = req.user!.id;
         const tools = await Tool.findAll({
-            where: { currentOwnerId: userId },
-            include: ['category', 'location', 'toolType', 'bookings', 'maintenances']
+            include: [{
+                model: Booking,
+                as: 'bookings',
+                where: {
+                    userId,
+                    status: 'active'
+                },
+                required: true
+            }]
         });
-        res.status(200).json(tools);
+
+        const toolsWithBooking = tools.map(tool => {
+            const toolJson = tool.toJSON() as any;
+            const activeBooking = toolJson.bookings?.find((b: any) => b.status === 'active' && b.userId === userId);
+            toolJson.activeBooking = activeBooking ? { id: activeBooking.id } : null;
+            return toolJson;
+        });
+
+        res.status(200).json(toolsWithBooking);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching user tools', error });
+        res.status(500).json({ message: 'Something went wrong' });
     }
 }; 

@@ -12,6 +12,8 @@ import useAuth from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 import { extendMoment } from 'moment-range';
 import Moment from 'moment';
+import ScannerModal from '@/components/ScannerModal';
+import { ScanLine } from 'lucide-react';
 
 const moment = extendMoment(Moment);
 
@@ -58,6 +60,7 @@ const CalendarPage = () => {
     const [bookingEndDate, setBookingEndDate] = useState<Date | null>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [toolToBook, setToolToBook] = useState<Tool | null>(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
 
     const { data: tools, isLoading: isLoadingTools } = useQuery<Tool[]>({
         queryKey: ['tools'],
@@ -100,6 +103,23 @@ const CalendarPage = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [dropdownRef]);
+
+    const handleScanSuccess = async (scannedId: string) => {
+        try {
+            const { data: foundTool } = await api.get(`/tools/${scannedId}`);
+            if (foundTool) {
+                setSelectedTool(foundTool.id.toString());
+                setSearchTerm(`${foundTool.toolType.name} (RFID: ${foundTool.rfid})`);
+                setIsDropdownOpen(false);
+            } else {
+                toast.error(t('calendar.toolNotFound'));
+            }
+        } catch (error) {
+            toast.error(t('calendar.toolNotFound'));
+        } finally {
+            setIsScannerOpen(false);
+        }
+    };
 
     const handleNavigate = (date: Date) => {
         setCurrentDate(date);
@@ -238,45 +258,50 @@ const CalendarPage = () => {
             <h1 className="text-3xl font-bold mb-6">{t('nav.calendarView')}</h1>
             <div className="mb-4">
                  <label htmlFor="tool-select" className="block text-sm font-medium text-gray-700 mb-1">{t('calendar.selectTool')}</label>
-                 <div className="relative w-full md:w-1/3" ref={dropdownRef}>
-                    <input
-                        id="tool-select"
-                        type="text"
-                        placeholder={t('calendar.searchTool') || 'Search for a tool...'}
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            if (e.target.value === '') {
-                                setSelectedTool('');
-                            }
-                            setIsDropdownOpen(true);
-                        }}
-                        onFocus={() => setIsDropdownOpen(true)}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        autoComplete="off"
-                    />
-                    {isDropdownOpen && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
-                            {filteredTools && filteredTools.length > 0 ? (
-                                filteredTools.map(tool => (
-                                    <li
-                                        key={tool.id}
-                                        onClick={() => {
-                                            setSelectedTool(tool.id.toString());
-                                            setSearchTerm(`${tool.toolType.name} (RFID: ${tool.rfid})`);
-                                            setIsDropdownOpen(false);
-                                        }}
-                                        className="p-2 hover:bg-gray-100 cursor-pointer"
-                                    >
-                                        {tool.toolType.name} (RFID: {tool.rfid})
-                                    </li>
-                                ))
-                            ) : (
-                                <li className="p-2 text-gray-500">{t('calendar.noToolsFound')}</li>
-                            )}
-                        </ul>
-                    )}
-                </div>
+                 <div className="flex items-center gap-2">
+                    <div className="relative w-full md:w-1/3" ref={dropdownRef}>
+                        <input
+                            id="tool-select"
+                            type="text"
+                            placeholder={t('calendar.searchTool') || 'Search for a tool...'}
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                if (e.target.value === '') {
+                                    setSelectedTool('');
+                                }
+                                setIsDropdownOpen(true);
+                            }}
+                            onFocus={() => setIsDropdownOpen(true)}
+                            className="w-full p-2 border border-gray-300 rounded-md"
+                            autoComplete="off"
+                        />
+                        {isDropdownOpen && filteredTools && (
+                            <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-auto">
+                                {filteredTools.length > 0 ? (
+                                    filteredTools.map(tool => (
+                                        <li
+                                            key={tool.id}
+                                            className="p-2 cursor-pointer hover:bg-gray-100"
+                                            onClick={() => {
+                                                setSelectedTool(tool.id.toString());
+                                                setSearchTerm(`${tool.toolType.name} (RFID: ${tool.rfid})`);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                        >
+                                            {`${tool.toolType.name} (RFID: ${tool.rfid})`}
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="p-2 text-gray-500">{t('calendar.noToolsFound')}</li>
+                                )}
+                            </ul>
+                        )}
+                    </div>
+                    <button onClick={() => setIsScannerOpen(true)} className="p-2 border border-gray-300 rounded-md hover:bg-gray-100">
+                        <ScanLine className="h-6 w-6 text-gray-600" />
+                    </button>
+                 </div>
             </div>
             
             {(isLoadingTools || (selectedTool && isLoadingBookings)) && <Spinner />}
@@ -309,6 +334,11 @@ const CalendarPage = () => {
                     endDate={bookingEndDate}
                 />
             )}
+            <ScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onScan={handleScanSuccess}
+            />
              <style jsx global>{`
                 .rbc-event {
                     display: none;

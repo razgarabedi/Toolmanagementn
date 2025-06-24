@@ -18,6 +18,7 @@ import CheckoutForm from '@/components/CheckoutForm';
 import CheckinForm from '@/components/CheckinForm';
 import useAuth from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
+import ScannerModal from '@/components/ScannerModal';
 
 interface ToolInstance {
     id: number;
@@ -46,6 +47,7 @@ const ToolsPage = () => {
     const { t } = useTranslation('common');
     const { user } = useAuth();
     const queryClient = useQueryClient();
+    const [search, setSearch] = useState('');
     const [expanded, setExpanded] = useState<Record<number, boolean>>({});
     const [searchTerms, setSearchTerms] = useState<Record<number, string>>({});
     const [showForm, setShowForm] = useState(false);
@@ -57,6 +59,7 @@ const ToolsPage = () => {
     const [isBookingModalOpen, setBookingModalOpen] = useState(false);
     const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
     const [isCheckinModalOpen, setCheckinModalOpen] = useState(false);
+    const [isScannerOpen, setScannerOpen] = useState(false);
 
     const { data: tools, isLoading, isError } = useQuery<ToolInstance[]>({
         queryKey: ['tools'],
@@ -117,6 +120,11 @@ const ToolsPage = () => {
     const handleEditInstance = (instance: ToolInstance) => {
         setEditingInstance(instance);
         setShowForm(true);
+    };
+
+    const handleScanSuccess = (scannedId: string) => {
+        setSearch(scannedId);
+        setScannerOpen(false);
     };
 
     if (isLoading) return <div className="flex justify-center items-center min-h-screen"><Spinner /></div>;
@@ -185,7 +193,7 @@ const ToolsPage = () => {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">{t('nav.tools')}</h1>
                 <div className="flex items-center gap-4">
-                    <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md flex items-center gap-2">
+                    <button onClick={() => setScannerOpen(true)} className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md flex items-center gap-2">
                         <Grid size={20} />
                         <span>{t('tools.scan')}</span>
                     </button>
@@ -199,7 +207,13 @@ const ToolsPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">{t('tools.search.title')}</label>
-                        <input type="text" placeholder={t('tools.search.placeholder')} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                        <input
+                            type="text"
+                            placeholder={t('tools.search.placeholder')}
+                            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">{t('tools.status.title')}</label>
@@ -235,10 +249,12 @@ const ToolsPage = () => {
                     const instances = type.instances || [];
                     const counts = getStatusCounts(instances);
                     const filteredInstances = instances.filter((instance) =>
-                        (instance.rfid?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '') ||
-                        (instance.serialNumber?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '') ||
-                        (instance.name?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '')
+                        (instance.rfid?.toLowerCase() || '').includes(search.toLowerCase() || '') ||
+                        (instance.serialNumber?.toLowerCase() || '').includes(search.toLowerCase() || '') ||
+                        (instance.name?.toLowerCase() || '').includes(search.toLowerCase() || '')
                     );
+
+                    if (filteredInstances.length === 0) return null;
 
                     return (
                         <div key={type.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -252,42 +268,48 @@ const ToolsPage = () => {
                                         objectFit="cover"
                                     />
                                 </div>
-                                <div className="flex-grow">
-                                    <h2 className="font-bold text-xl">{type.name}</h2>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-center">
+                                        <h2 className="font-bold text-xl">{type.name}</h2>
+                                        <div className="flex items-center gap-4">
+                                            <input
+                                                type="text"
+                                                placeholder={t('tools.instanceSearchPlaceholder')}
+                                                className="border-gray-300 rounded-md p-2"
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={(e) => handleSearchChange(type.id, e.target.value)}
+                                            />
+                                            {expanded[type.id] ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                                        </div>
+                                    </div>
                                     <p className="text-sm text-gray-500">{type.category?.name}</p>
                                     <p className="text-sm">
                                         <span className="text-green-600">{counts.available} {t('tools.available')}</span> / <span className="text-blue-600">{counts.checkedOut} {t('tools.checkedOut')}</span> ({counts.total} {t('tools.total')})
                                     </p>
                                 </div>
-                                {expanded[type.id] ? <ChevronUp /> : <ChevronDown />}
                             </div>
-
                             {expanded[type.id] && (
                                 <div className="p-4 border-t border-gray-200">
-                                    <div className="mb-4">
-                                        <input
-                                            type="text"
-                                            placeholder={t('tools.instanceSearchPlaceholder')}
-                                            value={searchTerms[type.id] || ''}
-                                            onChange={(e) => handleSearchChange(type.id, e.target.value)}
-                                            className="w-full md:w-1/3 p-2 border rounded-md"
-                                        />
-                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                        {filteredInstances.map((instance) => (
-                                            <ToolInstanceCard
-                                                key={instance.id}
-                                                instance={instance}
-                                                onEdit={() => handleEditInstance(instance)}
-                                                onDelete={() => setDeletingInstance(instance)}
-                                                onPreview={() => setPreviewingInstance(instance)}
-                                                onBook={() => handleBookClick(instance)}
-                                                onCheckout={() => handleCheckoutClick(instance)}
-                                                onCheckin={() => handleCheckinClick(instance)}
-                                                canManage={user?.role === 'admin' || user?.role === 'manager'}
-                                                canBook={user?.role !== 'admin' && user?.role !== 'manager'}
-                                            />
-                                        ))}
+                                        {filteredInstances
+                                            .filter((instance) =>
+                                                (instance.rfid?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '') ||
+                                                (instance.serialNumber?.toLowerCase() || '').includes(searchTerms[type.id]?.toLowerCase() || '')
+                                            )
+                                            .map((instance) => (
+                                                <ToolInstanceCard
+                                                    key={instance.id}
+                                                    instance={instance}
+                                                    onEdit={() => handleEditInstance(instance)}
+                                                    onDelete={() => setDeletingInstance(instance)}
+                                                    onPreview={() => setPreviewingInstance(instance)}
+                                                    onBook={() => handleBookClick(instance)}
+                                                    onCheckout={() => handleCheckoutClick(instance)}
+                                                    onCheckin={() => handleCheckinClick(instance)}
+                                                    canManage={user?.role === 'admin' || user?.role === 'manager'}
+                                                    canBook={true}
+                                                />
+                                            ))}
                                     </div>
                                 </div>
                             )}
@@ -313,8 +335,8 @@ const ToolsPage = () => {
                         deleteMutation.mutate(deletingInstance.id);
                         setDeletingInstance(null);
                     }}
-                    title={t('toolInstanceCard.deleteConfirmation.title')}
-                    message={t('toolInstanceCard.deleteConfirmation.message', { name: deletingInstance.name })}
+                    title={t('tools.deleteConfirmTitle')}
+                    message={t('tools.deleteConfirmMessage', { name: deletingInstance.name })}
                 />
             )}
             {previewingInstance && (
@@ -340,33 +362,33 @@ const ToolsPage = () => {
             )}
             {isBookingModalOpen && selectedTool && (
                 <BookingForm
-                    tool={selectedTool}
-                    onClose={() => {
-                        setBookingModalOpen(false);
-                        setSelectedTool(null);
-                    }}
-                    isAdminOrManager={user?.role === 'admin' || user?.role === 'manager'}
+                    toolId={selectedTool.id}
+                    isOpen={isBookingModalOpen}
+                    onClose={() => setBookingModalOpen(false)}
                 />
             )}
             {isCheckoutModalOpen && selectedTool && (
                 <CheckoutForm
                     tool={selectedTool}
-                    onClose={() => {
-                        setCheckoutModalOpen(false);
-                        setSelectedTool(null);
-                    }}
+                    isOpen={isCheckoutModalOpen}
+                    onClose={() => setCheckoutModalOpen(false)}
                     onSubmit={handleConfirmCheckout}
                     isAdminOrManager={user?.role === 'admin' || user?.role === 'manager'}
                 />
             )}
-            {isCheckinModalOpen && selectedTool && selectedTool.activeBooking && (
+            {isCheckinModalOpen && selectedTool && (
                 <CheckinForm
-                    tool={selectedTool}
-                    booking={selectedTool.activeBooking}
+                    toolName={selectedTool.name}
+                    isOpen={isCheckinModalOpen}
                     onClose={() => setCheckinModalOpen(false)}
                     onSubmit={handleConfirmCheckin}
                 />
             )}
+            <ScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setScannerOpen(false)}
+                onScan={handleScanSuccess}
+            />
         </div>
     );
 };

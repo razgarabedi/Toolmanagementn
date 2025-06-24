@@ -24,7 +24,8 @@ import {
   X,
   User as UserIcon,
   Bell,
-  BookCheck
+  BookCheck,
+  QrCode
 } from 'lucide-react';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -81,6 +82,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { href: '/tools', label: 'nav.tools', icon: Hammer, roles: ['user', 'manager', 'admin'] },
     { href: '/bookings', label: 'nav.bookings', icon: Book, roles: ['user', 'manager', 'admin'] },
     { href: '/my-bookings', label: 'nav.myBookings', icon: BookCheck, roles: ['user', 'manager', 'admin'] },
+    { href: '/scanner', label: 'nav.scanner', icon: QrCode, roles: ['user', 'manager', 'admin'] },
     { href: '/calendar', label: 'nav.calendarView', icon: Calendar, roles: ['user', 'manager', 'admin'] },
     { href: '/maintenance', label: 'nav.maintenance', icon: Wrench, roles: ['manager', 'admin'] },
     { href: '/spare-parts', label: 'nav.spareParts', icon: Package, roles: ['manager', 'admin'] },
