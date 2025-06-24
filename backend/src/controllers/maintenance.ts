@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Maintenance, Tool } from '../models';
+import { Maintenance, Tool, Attachment } from '../models';
 
 export const createMaintenance = async (req: Request, res: Response) => {
     try {
@@ -20,8 +20,8 @@ export const createMaintenance = async (req: Request, res: Response) => {
         });
 
         res.status(201).json(maintenance);
-    } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+    } catch (error: any) {
+        res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
 };
 
@@ -30,8 +30,20 @@ export const getToolMaintenanceHistory = async (req: Request, res: Response) => 
         const { toolId } = req.params;
         const history = await Maintenance.findAll({ where: { toolId }, order: [['startDate', 'DESC']] });
         res.status(200).json(history);
-    } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+    } catch (error: any) {
+        res.status(500).json({ message: 'Something went wrong', error: error.message });
+    }
+};
+
+export const getAllMaintenance = async (req: Request, res: Response) => {
+    try {
+        const maintenanceTasks = await Maintenance.findAll({
+            include: [{ model: Tool, as: 'tool', attributes: ['name', 'id'] }],
+            order: [['startDate', 'DESC']]
+        });
+        res.status(200).json(maintenanceTasks);
+    } catch (error: any) {
+        res.status(500).json({ message: 'Something went wrong', 'error': error.message });
     }
 };
 
@@ -48,7 +60,46 @@ export const updateMaintenance = async (req: Request, res: Response) => {
         await maintenance.update({ description, cost, startDate, endDate, status });
 
         res.status(200).json(maintenance);
-    } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
+    } catch (error: any) {
+        res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
-} 
+}
+
+export const finishMaintenance = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { notes } = req.body;
+
+        const maintenance = await Maintenance.findByPk(id);
+
+        if (!maintenance) {
+            return res.status(404).json({ message: 'Maintenance record not found' });
+        }
+
+        maintenance.status = 'completed';
+        maintenance.endDate = new Date();
+        if (notes) {
+            maintenance.notes = notes;
+        }
+
+        await maintenance.save();
+
+        const tool = await Tool.findByPk(maintenance.toolId);
+        if (tool && tool.status === 'in_maintenance') {
+            tool.status = 'available';
+            await tool.save();
+        }
+
+        if (req.file) {
+            await Attachment.create({
+                fileName: req.file.filename,
+                filePath: req.file.path,
+                toolId: maintenance.toolId,
+            });
+        }
+
+        res.status(200).json(maintenance);
+    } catch (error: any) {
+        res.status(500).json({ message: 'Something went wrong', error: error.message });
+    }
+}; 

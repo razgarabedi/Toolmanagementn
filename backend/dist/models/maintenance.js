@@ -9,6 +9,7 @@ class Maintenance extends sequelize_1.Model {
     static associate(models) {
         Maintenance.belongsTo(models.Tool, { as: 'tool', foreignKey: 'toolId' });
         Maintenance.belongsToMany(models.SparePart, { through: 'maintenance_spare_parts', as: 'spareParts', foreignKey: 'maintenanceId' });
+        Maintenance.belongsTo(models.User, { as: 'completedByUser', foreignKey: 'completedByUserId' });
     }
 }
 Maintenance.init({
@@ -45,6 +46,18 @@ Maintenance.init({
         type: sequelize_1.DataTypes.ENUM('scheduled', 'in_progress', 'completed', 'requested'),
         allowNull: false,
     },
+    notes: {
+        type: sequelize_1.DataTypes.TEXT,
+        allowNull: true,
+    },
+    completedByUserId: {
+        type: sequelize_1.DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'users',
+            key: 'id'
+        }
+    }
 }, {
     tableName: 'maintenances',
     sequelize: db_1.default,

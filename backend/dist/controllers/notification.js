@@ -1,18 +1,93 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markAsRead = exports.getMyNotifications = void 0;
+exports.clearAllNotifications = exports.markAllAsRead = exports.markAsRead = exports.getUnreadNotifications = exports.getAllNotifications = void 0;
 const models_1 = require("../models");
-const getMyNotifications = async (req, res) => {
+const getAllNotifications = async (req, res) => {
     try {
         const userId = req.user.id;
-        const notifications = await models_1.Notification.findAll({ where: { userId, isRead: false } });
+        const notifications = await models_1.Notification.findAll({
+            where: { userId },
+            include: [
+                {
+                    model: models_1.User,
+                    as: 'user',
+                    attributes: ['username']
+                },
+                {
+                    model: models_1.Tool,
+                    as: 'tool',
+                    include: [
+                        {
+                            model: models_1.ToolType,
+                            as: 'toolType',
+                            attributes: ['name']
+                        },
+                        {
+                            model: models_1.Location,
+                            as: 'location',
+                            attributes: ['name']
+                        },
+                        {
+                            model: models_1.Manufacturer,
+                            as: 'manufacturer',
+                            attributes: ['name']
+                        }
+                    ]
+                }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
         res.status(200).json(notifications);
     }
     catch (error) {
+        console.error("Error fetching user notifications:", error);
         res.status(500).json({ message: 'Error fetching user notifications', error });
     }
 };
-exports.getMyNotifications = getMyNotifications;
+exports.getAllNotifications = getAllNotifications;
+const getUnreadNotifications = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const notifications = await models_1.Notification.findAll({
+            where: { userId, isRead: false },
+            include: [
+                {
+                    model: models_1.User,
+                    as: 'user',
+                    attributes: ['username']
+                },
+                {
+                    model: models_1.Tool,
+                    as: 'tool',
+                    include: [
+                        {
+                            model: models_1.ToolType,
+                            as: 'toolType',
+                            attributes: ['name']
+                        },
+                        {
+                            model: models_1.Location,
+                            as: 'location',
+                            attributes: ['name']
+                        },
+                        {
+                            model: models_1.Manufacturer,
+                            as: 'manufacturer',
+                            attributes: ['name']
+                        }
+                    ]
+                }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+        res.status(200).json(notifications);
+    }
+    catch (error) {
+        console.error("Error fetching unread notifications:", error);
+        res.status(500).json({ message: 'Error fetching user notifications', error });
+    }
+};
+exports.getUnreadNotifications = getUnreadNotifications;
 const markAsRead = async (req, res) => {
     try {
         const { id } = req.params;
@@ -28,7 +103,32 @@ const markAsRead = async (req, res) => {
         }
     }
     catch (error) {
+        console.error("Error marking notification as read:", error);
         res.status(500).json({ message: 'Something went wrong' });
     }
 };
 exports.markAsRead = markAsRead;
+const markAllAsRead = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await models_1.Notification.update({ isRead: true }, { where: { userId, isRead: false } });
+        res.status(200).json({ message: 'All notifications marked as read' });
+    }
+    catch (error) {
+        console.error("Error marking all notifications as read:", error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+exports.markAllAsRead = markAllAsRead;
+const clearAllNotifications = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await models_1.Notification.destroy({ where: { userId } });
+        res.status(200).json({ message: 'All notifications cleared' });
+    }
+    catch (error) {
+        console.error("Error clearing all notifications:", error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+exports.clearAllNotifications = clearAllNotifications;

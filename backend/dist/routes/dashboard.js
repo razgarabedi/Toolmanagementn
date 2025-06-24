@@ -10,4 +10,5 @@ router.get('/utilization', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manage
 router.get('/reports/maintenance-cost', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getMaintenanceCostReport);
 router.get('/reports/utilization', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getUtilizationReport);
 router.get('/reports/missing-tools', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getMissingToolsReport);
+router.get('/reports/bookings', [auth_1.auth, (0, auth_1.authorize)(['admin', 'manager'])], dashboard_1.getBookingReport);
 exports.default = router;

@@ -51,6 +51,7 @@ const createTool = async (req, res) => {
             manufacturerId: (manufacturerId && !isNaN(parseInt(manufacturerId, 10))) ? parseInt(manufacturerId, 10) : null,
             description,
             name,
+            status: 'available',
             instanceImage,
         }, { transaction: t });
         if (files === null || files === void 0 ? void 0 : files.attachments) {
@@ -103,8 +104,7 @@ const calculateToolStatus = (tool) => {
     const hasActiveBooking = (_b = tool.bookings) === null || _b === void 0 ? void 0 : _b.some(b => b.status === 'active');
     if (hasActiveBooking)
         return 'in_use';
-    const hasUpcomingOrPendingBooking = (_c = tool.bookings) === null || _c === void 0 ? void 0 : _c.some(b => (b.status === 'approved' && new Date(b.startDate) > now) ||
-        b.status === 'pending');
+    const hasUpcomingOrPendingBooking = (_c = tool.bookings) === null || _c === void 0 ? void 0 : _c.some(b => b.status === 'approved' || b.status === 'pending');
     if (hasUpcomingOrPendingBooking)
         return 'booked';
     const hasUpcomingMaintenance = (_d = tool.maintenances) === null || _d === void 0 ? void 0 : _d.some(m => m.status === 'scheduled');

@@ -19,11 +19,11 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req: any, file: any, cb: any) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const allowedTypes = /jpeg|jpg|png|gif|webp|pdf|doc|docx|xls|xlsx|txt/;
     const mimetype = allowedTypes.test(file.mimetype);
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
 
-    if (mimetype && extname) {
+    if (mimetype || extname) {
         return cb(null, true);
     }
     cb(new Error('Error: File upload only supports the following filetypes - ' + allowedTypes));

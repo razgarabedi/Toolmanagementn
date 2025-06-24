@@ -44,6 +44,11 @@ Tool.init({
         allowNull: true,
         unique: true
     },
+    status: {
+        type: sequelize_1.DataTypes.ENUM('available', 'in_use', 'in_maintenance', 'booked'),
+        allowNull: false,
+        defaultValue: 'available'
+    },
     condition: {
         type: sequelize_1.DataTypes.ENUM('new', 'good', 'fair', 'poor'),
         allowNull: false,

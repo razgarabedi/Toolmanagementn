@@ -9,6 +9,7 @@ const db_1 = __importDefault(require("../db"));
 class Notification extends sequelize_1.Model {
     static associate(models) {
         Notification.belongsTo(models.User, { as: 'user', foreignKey: 'userId' });
+        Notification.belongsTo(models.Tool, { as: 'tool', foreignKey: 'toolId' });
     }
 }
 exports.Notification = Notification;
@@ -22,14 +23,26 @@ Notification.init({
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
     },
-    message: {
+    messageKey: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
+    },
+    messagePayload: {
+        type: sequelize_1.DataTypes.JSON,
+        allowNull: true,
     },
     isRead: {
         type: sequelize_1.DataTypes.BOOLEAN,
         defaultValue: false,
         allowNull: false,
+    },
+    toolId: {
+        type: sequelize_1.DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'tools',
+            key: 'id',
+        },
     }
 }, {
     sequelize: db_1.default,

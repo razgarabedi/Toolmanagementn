@@ -46,11 +46,23 @@ Booking.init({
         allowNull: false,
         defaultValue: 'pending',
     },
+    notes: {
+        type: sequelize_1.DataTypes.TEXT,
+        allowNull: true,
+    },
     overdueNotified: {
         type: sequelize_1.DataTypes.BOOLEAN,
         allowNull: true,
         defaultValue: false
-    }
+    },
+    checkinNotes: {
+        type: sequelize_1.DataTypes.TEXT,
+        allowNull: true,
+    },
+    conditionOnReturn: {
+        type: sequelize_1.DataTypes.ENUM('new', 'good', 'fair', 'poor'),
+        allowNull: true,
+    },
 }, {
     tableName: 'bookings',
     sequelize: db_1.default,

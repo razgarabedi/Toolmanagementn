@@ -11,6 +11,7 @@ interface MaintenanceAttributes {
   startDate: Date;
   endDate?: Date;
   status: 'scheduled' | 'in_progress' | 'completed' | 'requested';
+  notes?: string;
 }
 
 interface MaintenanceCreationAttributes extends Optional<MaintenanceAttributes, 'id'> {}
@@ -24,6 +25,7 @@ class Maintenance extends Model<MaintenanceAttributes, MaintenanceCreationAttrib
   public startDate!: Date;
   public endDate?: Date;
   public status!: 'scheduled' | 'in_progress' | 'completed' | 'requested';
+  public notes?: string;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -68,6 +70,10 @@ Maintenance.init(
     status: {
       type: DataTypes.ENUM('scheduled', 'in_progress', 'completed', 'requested'),
       allowNull: false,
+    },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {

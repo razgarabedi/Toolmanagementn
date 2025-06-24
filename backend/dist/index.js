@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.io = void 0;
 require("./i18n");
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -24,9 +25,20 @@ const manufacturer_1 = __importDefault(require("./routes/manufacturer"));
 const toolType_1 = __importDefault(require("./routes/toolType"));
 const models_1 = require("./models");
 require("./lib/cron");
+const http_1 = __importDefault(require("http"));
+const socket_io_1 = require("socket.io");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 5000;
+// Create HTTP server and attach Socket.io
+const server = http_1.default.createServer(app);
+const io = new socket_io_1.Server(server, {
+    cors: {
+        origin: 'http://localhost:3000',
+        credentials: true,
+    },
+});
+exports.io = io;
 app.use((0, cors_1.default)({
     origin: 'http://localhost:3000',
     credentials: true,
@@ -57,9 +69,17 @@ app.get('/api/roles', async (req, res) => {
         res.status(500).json({ message: 'Something went wrong' });
     }
 });
+io.on('connection', (socket) => {
+    // Expect the client to send their userId after connecting
+    socket.on('join', (userId) => {
+        if (userId) {
+            socket.join(`user_${userId}`);
+        }
+    });
+});
 db_1.default.sync().then(() => {
     console.log('Database synced');
-    app.listen(port, () => {
+    server.listen(port, () => {
         console.log(`[server]: Server is running at http://localhost:${port}`);
     });
 }).catch((err) => {

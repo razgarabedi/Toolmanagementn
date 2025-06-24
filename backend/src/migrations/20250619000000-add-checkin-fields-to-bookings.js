@@ -14,7 +14,12 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('bookings', 'checkinNotes');
-    await queryInterface.removeColumn('bookings', 'conditionOnReturn');
+    const tableDescription = await queryInterface.describeTable('bookings');
+    if (tableDescription.checkinNotes) {
+      await queryInterface.removeColumn('bookings', 'checkinNotes');
+    }
+    if (tableDescription.conditionOnReturn) {
+      await queryInterface.removeColumn('bookings', 'conditionOnReturn');
+    }
   }
 }; 

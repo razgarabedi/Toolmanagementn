@@ -20,13 +20,21 @@ node_cron_1.default.schedule('0 0 * * *', async () => {
                     [sequelize_1.Op.not]: true
                 }
             },
-            include: ['user']
+            include: ['user', 'tool']
         });
         for (const booking of overdueBookings) {
+            // @ts-ignore
+            const toolName = booking.tool ? booking.tool.name : `ID: ${booking.toolId}`;
             // Notify user
             await models_1.Notification.create({
                 userId: booking.userId,
-                message: `Your booking for tool #${booking.toolId} is overdue. Please return it as soon as possible.`
+                toolId: booking.toolId,
+                messageKey: 'bookingOverdue',
+                messagePayload: {
+                    // @ts-ignore
+                    username: booking.user.username,
+                    toolName
+                }
             });
             // Optionally, notify managers/admins
             // This requires a way to get all managers/admins

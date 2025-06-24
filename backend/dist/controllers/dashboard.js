@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMissingToolsReport = exports.getUtilizationReport = exports.getMaintenanceCostReport = exports.getUtilizationSummary = exports.getMaintenanceSummary = exports.getInventorySummary = void 0;
+exports.getBookingReport = exports.getMissingToolsReport = exports.getUtilizationReport = exports.getMaintenanceCostReport = exports.getUtilizationSummary = exports.getMaintenanceSummary = exports.getInventorySummary = void 0;
 const models_1 = require("../models");
 const db_1 = __importDefault(require("../db"));
 const sequelize_1 = require("sequelize");
@@ -142,3 +142,17 @@ const getMissingToolsReport = async (req, res) => {
     }
 };
 exports.getMissingToolsReport = getMissingToolsReport;
+const getBookingReport = async (req, res) => {
+    try {
+        const bookings = await models_1.Booking.findAll({
+            include: ['tool', 'user'],
+            order: [['createdAt', 'DESC']]
+        });
+        res.status(200).json(bookings);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+exports.getBookingReport = getBookingReport;
